@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "66121750982",
+    "project_id": "mishkatdb",
+    "storage_bucket": "mishkatdb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66121750982:android:ccd631441e07ee92457ac7",
+        "android_client_info": {
+          "package_name": "com.example.mishkat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCS96Acu2PQZlTcT-7SlWH98qizTWoINkU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
