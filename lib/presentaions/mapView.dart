@@ -40,6 +40,8 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double labelSize = 15.0; // Adjust the size based on your needs
+    double iconSize = 15.0;
     return Scaffold(
       body: GestureDetector(
         child: FlutterMap(
@@ -59,7 +61,9 @@ class _MapScreenState extends State<MapScreen> {
                 polygons: polygons,
               ),
             ),
-            MarkerLayer(markers: polygonLabels),
+            MarkerLayer(
+              markers: polygonLabels,
+            ),
           ],
         ),
       ),
@@ -127,50 +131,23 @@ class _MapScreenState extends State<MapScreen> {
                   _handleLabelTap(feature['properties']['roomId']);
                 },
                 child: Transform.translate(
-                  offset: Offset(9.0, 1.0),
+                  //11goes down and the 3 left and right
+                  offset: Offset(11.0, 3.0),
                   child: Transform.rotate(
-                    angle: -pi / 2,
+                    angle: -pi / 2.5,
                     child: Column(
                       children: [
-                        // if (feature['properties']['icon'] != null)
-                        //   Image.network(
-                        //     feature['properties']['icon'],
-                        //     height: 11,
-                        //     width: 11,
-                        //   ),
+                        if (feature['properties']['icon'] != null)
+                          Image.network(
+                            feature['properties']['icon'],
+                            height: 15,
+                            width: 15,
+                          ),
 
-                        if (feature['properties']['icon'] ==
-                            "https://cdn-icons-png.flaticon.com/512/1057/1057624.png")
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 11,
-                            width: 11,
-                          ),
-                        if (feature['properties']['icon'] ==
-                            "https://cdn-icons-png.flaticon.com/512/6131/6131013.png")
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 11,
-                            width: 11,
-                          ),
-                        if (feature['properties']['icon'] ==
-                            "https://cdn-icons-png.flaticon.com/512/10997/10997170.png")
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 11,
-                            width: 11,
-                          ),
-                        if (feature['properties']['icon'] ==
-                            "https://cdn-icons-png.freepik.com/256/4994/4994427.png")
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 11,
-                            width: 11,
-                          ),
 //if(feature['properties']['type']=="service")
                         Text(
                           feature['properties']['label'] ?? '',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.black,
                             fontSize: 8.0,
                           ),

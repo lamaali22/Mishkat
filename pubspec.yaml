@@ -73,10 +73,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/map.geojson
-    - assets/left.png
-    - assets/patio.png
-    - assets/prayerRoom.png
-    - assets/stair.png
+  
 
 
 
