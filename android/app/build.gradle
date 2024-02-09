@@ -1,3 +1,9 @@
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+apply plugin: 'com.google.gms.google-services'  // Add this line at the end
+
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -21,6 +27,7 @@ def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
+
 
 android {
     namespace "com.example.mishkat"
@@ -66,4 +73,8 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.firebase:firebase-core:^2.24.2'
+    implementation 'com.google.firebase:firebase-auth:^4.16.0'
+}

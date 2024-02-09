@@ -1,0 +1,25 @@
+Explanation:
+
+main.dart: Entry point of your Flutter app.
+
+src: Short for "source code," this directory contains your main application code.
+
+pages: Contains individual pages/screens of your app.
+
+home_page.dart: Your app's home page.
+sign_in_page.dart: Page for mobile phone OTP authentication.
+widgets: Reusable UI components.
+
+custom_button.dart: A button with custom styling.
+otp_input_field.dart: Widget for OTP input field.
+Other widgets you may need.
+services: Business logic and services.
+
+authentication_service.dart: Handles user authentication logic.
+models: Data models for your app.
+
+user.dart: Represents the user model.
+utils: Utility functions or constants.
+
+constants.dart: App-wide constants.
+validators.dart: Functions for input validation.
