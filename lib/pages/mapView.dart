@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -221,12 +222,14 @@ class _MapScreenState extends State<MapScreen> {
                         //     },
                         //   ),
                         // ] else ...[
+
                         Text(
                           feature['properties']['label'] ?? '',
                           style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 8.0,
-                          ),
+                              color: Colors.black,
+                              fontSize: 8.0,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400),
                           maxLines: 2,
                         ),
                         // ],
@@ -248,6 +251,7 @@ class _MapScreenState extends State<MapScreen> {
     String serviceType = '';
     String openTime = "";
     String closeTime = "";
+    bool isAvailable = await _isRoomAvailable(roomId);
 
     if (type == 'service') {
       try {
@@ -291,23 +295,55 @@ class _MapScreenState extends State<MapScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (type != 'service') ...[
-                  Text(
-                    roomId,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.black,
-                      decoration: TextDecoration.none,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        roomId,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.black,
+                          decoration: TextDecoration.none,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      if (type == "lab" || type == "classroom") ...[
+                        SizedBox(
+                            width:
+                                175), // Adjust the spacing between roomId and availability status
+                        Row(
+                          children: [
+                            Icon(
+                              isAvailable ? Icons.circle : Icons.circle,
+                              color: isAvailable ? Colors.green : Colors.red,
+                              size: 12,
+                            ),
+                            SizedBox(
+                                width:
+                                    4), // Adjust the spacing between the circle icon and availability status
+                            Text(
+                              isAvailable ? "Available" : "Unavailable",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontSize: 18.0,
+                                  fontFamily: 'Poppins',
+                                  decoration: TextDecoration.none),
+                            ),
+                          ],
+                        ),
+                      ]
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     type,
                     style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black,
-                      decoration: TextDecoration.none,
-                    ),
+                        fontSize: 18,
+                        color: Colors.black,
+                        decoration: TextDecoration.none,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.normal),
                   ),
                   SizedBox(height: 16),
                 ],
@@ -319,23 +355,30 @@ class _MapScreenState extends State<MapScreen> {
                       fontSize: 20,
                       color: Colors.black,
                       decoration: TextDecoration.none,
+                      fontFamily: 'Poppins',
                     ),
                   ),
+                  SizedBox(height: 6),
                   Text(
                     '$serviceType',
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
                       color: Colors.black,
                       decoration: TextDecoration.none,
+                      fontFamily: 'Poppins',
                     ),
                   ),
+                  SizedBox(height: 4),
                   if (serviceType == "Restaurant" || serviceType == "Market")
                     Text(
                       'opens from ' + '$openTime' + ' to ' + '$closeTime',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black,
+                        fontWeight: FontWeight.normal,
                         decoration: TextDecoration.none,
+                        fontFamily: 'Poppins',
                       ),
                     ),
                   const SizedBox(height: 16),
@@ -367,6 +410,7 @@ class _MapScreenState extends State<MapScreen> {
                         decoration: TextDecoration.underline,
                         decorationColor: Color.fromARGB(255, 9, 24, 108),
                         fontSize: 12,
+                        fontFamily: 'Poppins',
                       ),
                     ),
                   ),
@@ -384,6 +428,7 @@ class _MapScreenState extends State<MapScreen> {
                         decoration: TextDecoration.underline,
                         decorationColor: Color.fromARGB(255, 9, 24, 108),
                         fontSize: 12,
+                        fontFamily: 'Poppins',
                       ),
                     ),
                   ),
@@ -396,6 +441,70 @@ class _MapScreenState extends State<MapScreen> {
     );
     // Move the map to the labelPosition with a specific zoom level
     mapController.move(position, 21.0);
+  }
+
+  Future<bool> _isRoomAvailable(String roomId) async {
+    DateTime now = DateTime.now();
+    print("now: $now");
+
+    // Extract the current day and time in HH:mm format
+    String currentTime = DateFormat.Hm().format(now);
+    print("current time: $currentTime");
+
+    // Adjust the day of the week to match Firestore's indexing (Firestore starts the week on Sunday)
+    int firestoreDayOfWeek = now.weekday;
+    print("Firestore day of week: $firestoreDayOfWeek");
+
+    // Get the Firestore document for the classroom
+    DocumentSnapshot classroomSnapshot = await FirebaseFirestore.instance
+        .collection('Classroom')
+        .doc(roomId)
+        .get();
+
+    if (classroomSnapshot.exists) {
+      // Select the corresponding timeslots array based on the current day
+      List<dynamic> timeslots = [];
+      switch (firestoreDayOfWeek) {
+        case 0: // Sunday
+          timeslots = classroomSnapshot['sundayTimeslots'];
+          break;
+        case 1: // Monday
+          timeslots = classroomSnapshot['mondayTimeslots'];
+          break;
+        case 2: // Tuesday
+          timeslots = classroomSnapshot['tuesdayTimeslots'];
+          break;
+        case 3: // Wednesday
+          timeslots = classroomSnapshot['wednesdayTimeslots'];
+          break;
+        case 4: // Thursday
+          timeslots = classroomSnapshot['thursdayTimeslots'];
+          break;
+
+        default:
+        // Handle other cases if needed
+      }
+
+      // Check if there are any timeslots that intersect with the current time
+      bool isAvailable = true; // Assume the room is available by default
+      for (var timeslot in timeslots) {
+        String fromTime = timeslot['from'];
+        String toTime = timeslot['to'];
+
+        // Check if the current time falls within the timeslot
+        if (currentTime.compareTo(fromTime) >= 0 &&
+            currentTime.compareTo(toTime) < 0) {
+          // Current time is within a timeslot, so the room is unavailable
+          isAvailable = false;
+          break; // No need to check further
+        }
+      }
+
+      return isAvailable;
+    }
+
+    // Room is available if not occupied in any time slot
+    return true;
   }
 
   Future<void> _showOfficeMembersDialog(String roomId) async {
@@ -432,6 +541,7 @@ class _MapScreenState extends State<MapScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 18.0,
                             color: Color.fromARGB(255, 9, 24, 108),
+                            fontFamily: 'Poppins',
                           ),
                         ),
                         IconButton(
@@ -488,6 +598,7 @@ class _MapScreenState extends State<MapScreen> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
+                                fontFamily: 'Poppins',
                               ),
                             ),
                           );
@@ -524,6 +635,7 @@ class _MapScreenState extends State<MapScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 18.0,
                             color: Color.fromARGB(255, 9, 24, 108),
+                            fontFamily: 'Poppins',
                           ),
                         ),
                         IconButton(
@@ -546,6 +658,7 @@ class _MapScreenState extends State<MapScreen> {
                       style: TextStyle(
                         fontSize: 16.0,
                         color: Color.fromARGB(255, 9, 24, 108),
+                        fontFamily: 'Poppins',
                       ),
                     ),
                   ),
@@ -604,7 +717,10 @@ class _MapScreenState extends State<MapScreen> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(color: textColor), // Adjust label color
+                  style: TextStyle(
+                    color: textColor,
+                    fontFamily: 'Poppins',
+                  ), // Adjust label color
                 ),
                 const SizedBox(width: 7.0),
                 Icon(icon, color: iconColor), // Adjust icon color
