@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
+import 'package:mishkat/services/BluetoothPermissions.dart';
+import 'package:mishkat/services/CurrentLocation.dart';
+import 'package:mishkat/widgets/Messages.dart';
+import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +50,8 @@ class _MapScreenState extends State<MapScreen> {
   MapController mapController;
   List<Polygon> polygons;
   List<Marker> polygonLabels;
+  LatLng userLocation = LatLng(24.7231, 46.63682222);
+  Location location = Location();
 
   _MapScreenState()
       : mapController = MapController(),
@@ -53,6 +61,24 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+
+        backgroundColor: Color(0xFF09186C),
+        title: Center(
+          child: Text(
+            "Map",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+        ),
+
+        toolbarHeight: 90, // Set the desired height here
+        // Additional properties if needed
+      ),
+      bottomNavigationBar: CustomNavigationBar(index: 1),
       body: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -742,9 +768,133 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  //for debugging
+  int scanningCounter = 0;
   @override
   void initState() {
     super.initState();
+    BluetoothPermissions().initBluetooth();
     _loadGeoJson();
+    periodicStartScanning();
+
+//backup working code
+    // Future.delayed(Duration(seconds: 5), () {
+    //   location.startScanning();
+    //   // if no ble signals
+    //   if (location.currentLocation == LatLng(0, 0)) {
+    //     // wait for 15 more seconds
+    //     Future.delayed(Duration(seconds: 15), () {
+    //       //if there is still no signals
+    //       if (location.currentLocation == LatLng(0, 0)) {
+    //         print("currentLocaoitn is in first check  0,0");
+    //         showNoSignalAvailable(context);
+    //       } //if signals were detected after 15 seconds
+    //       else {
+    //         displayUserCurrentLocation(location.currentLocation);
+    //         print("displayUserCurrentLocation now called");
+    //         print("mapview  currentLocation  ${location.currentLocation}");
+    //       }
+    //     });
+    //   } // there are signals
+    //   else {
+    //     displayUserCurrentLocation(location.currentLocation);
+    //     print("displayUserCurrentLocation now called");
+    //     print("mapview  currentLocation  ${location.currentLocation}");
+    //   }
+    // });
+    // print("Executing code every 10 seconds");
+  }
+
+  late Timer scanningTimer;
+  void periodicStartScanning() {
+    Future.delayed(Duration(seconds: 2), () {
+      scanningTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+        location.startScanning();
+        scanningCounter++;
+        print("scanningCounter $scanningCounter");
+        Future.delayed(Duration(seconds: 4), () {
+          // if no ble signals
+          if (location.currentLocation == LatLng(0, 0)) {
+            // wait for 15 more seconds
+            Future.delayed(Duration(seconds: 15), () {
+              //if there is still no signals
+              if (location.currentLocation == LatLng(0, 0)) {
+                print("currentLocaoitn is in first check  0,0");
+                showNoSignalAvailable(context);
+              } //if signals were detected after 15 seconds
+              else {
+                displayUserCurrentLocation(location.currentLocation);
+                print("displayUserCurrentLocation now called");
+                print("mapview  currentLocation  ${location.currentLocation}");
+              }
+            });
+          } // there are signals
+          else {
+            displayUserCurrentLocation(location.currentLocation);
+            print("displayUserCurrentLocation now called");
+            print("mapview  currentLocation  ${location.currentLocation}");
+          }
+        });
+        print("Executing code every 10 seconds");
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // Stop scanning when the screen is disposed
+    location.stopScanning();
+    scanningTimer.cancel();
+    print("inside dispose");
+    super.dispose();
+  }
+
+// Declare a variable to store the user's location marker
+  Marker? userLocationMarker;
+  void displayUserCurrentLocation(LatLng userLocation) {
+    // Remove the existing marker if it exists
+    if (userLocationMarker != null) {
+      setState(() {
+        polygonLabels.remove(userLocationMarker);
+      });
+    }
+
+    // Create a new marker
+    userLocationMarker = Marker(
+      width: 50.0,
+      height: 50.0,
+      point: userLocation,
+      builder: (BuildContext context) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue.withOpacity(0.28),
+              ),
+            ),
+            Container(
+              width: 20.0,
+              height: 20.0,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    // Add the new marker to the list of markers
+    setState(() {
+      polygonLabels.add(userLocationMarker!);
+    });
+    if (userLocationMarker == null) {
+      // Move the camera to the user's location
+      mapController.move(userLocation, 20.0);
+    }
   }
 }
