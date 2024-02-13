@@ -251,7 +251,7 @@ class _MapScreenState extends State<MapScreen> {
     String serviceType = '';
     String openTime = "";
     String closeTime = "";
-    bool isAvailable = await _isRoomAvailable(roomId);
+    bool isAvailable = await _isRoomAvailable(roomId, type);
 
     if (type == 'service') {
       try {
@@ -443,7 +443,7 @@ class _MapScreenState extends State<MapScreen> {
     mapController.move(position, 21.0);
   }
 
-  Future<bool> _isRoomAvailable(String roomId) async {
+  Future<bool> _isRoomAvailable(String roomId, String type) async {
     DateTime now = DateTime.now();
     print("now: $now");
 
@@ -454,31 +454,39 @@ class _MapScreenState extends State<MapScreen> {
     // Adjust the day of the week to match Firestore's indexing (Firestore starts the week on Sunday)
     int firestoreDayOfWeek = now.weekday;
     print("Firestore day of week: $firestoreDayOfWeek");
+    String roomType = "";
+    if (type != "classroom" &&
+        type != "mariah auditorium" &&
+        type != "khadijah auditorium" &&
+        type != 'lab') return false;
 
+    if (type == "classroom" ||
+        type == "mariah auditorium" ||
+        type == "khadijah auditorium") roomType = "Classroom";
+
+    if (type == "lab") roomType = "Lab";
     // Get the Firestore document for the classroom
-    DocumentSnapshot classroomSnapshot = await FirebaseFirestore.instance
-        .collection('Classroom')
-        .doc(roomId)
-        .get();
+    DocumentSnapshot roomSnapshot =
+        await FirebaseFirestore.instance.collection(roomType).doc(roomId).get();
 
-    if (classroomSnapshot.exists) {
+    if (roomSnapshot.exists) {
       // Select the corresponding timeslots array based on the current day
       List<dynamic> timeslots = [];
       switch (firestoreDayOfWeek) {
         case 0: // Sunday
-          timeslots = classroomSnapshot['sundayTimeslots'];
+          timeslots = roomSnapshot['sundayTimeslots'];
           break;
         case 1: // Monday
-          timeslots = classroomSnapshot['mondayTimeslots'];
+          timeslots = roomSnapshot['mondayTimeslots'];
           break;
         case 2: // Tuesday
-          timeslots = classroomSnapshot['tuesdayTimeslots'];
+          timeslots = roomSnapshot['tuesdayTimeslots'];
           break;
         case 3: // Wednesday
-          timeslots = classroomSnapshot['wednesdayTimeslots'];
+          timeslots = roomSnapshot['wednesdayTimeslots'];
           break;
         case 4: // Thursday
-          timeslots = classroomSnapshot['thursdayTimeslots'];
+          timeslots = roomSnapshot['thursdayTimeslots'];
           break;
 
         default:
