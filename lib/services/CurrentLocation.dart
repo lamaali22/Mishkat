@@ -1,4 +1,3 @@
-// ignore: file_names
 import 'dart:math';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:dart_numerics/dart_numerics.dart';
@@ -16,23 +15,11 @@ class Location {
         {}; // list of distances between each beacon and the user's device
     List<BluetoothDevice> devices =
         []; //list of Bluetooth Devices that the user's device is scanning from
-    CCISBeacons ccisBeacons =
-        CCISBeacons(); //used for testing only must be fetched from the db
+    List<Beacon> scannedBeacons = [];
 
     // --   for trsting purposes only  --
-    Beacon beacon1 =
-        Beacon("C3:00:00:16:F6:6B", LatLng(24.7231574, 46.6368442));
-    Beacon beacon2 =
-        Beacon("C3:00:00:16:F6:66", LatLng(24.7231500, 46.6366913));
-    Beacon beacon3 =
-        Beacon("C3:00:00:16:F6:E1", LatLng(24.7231656, 46.6364553));
-    Beacon beacon4 =
-        Beacon("C3:00:00:16:F6:6A", LatLng(24.723095446369882, 46.63696832269832));
-    ccisBeacons.GBeacons.add(beacon1);
-    ccisBeacons.GBeacons.add(beacon2);
-    ccisBeacons.GBeacons.add(beacon3);
-    ccisBeacons.GBeacons.add(beacon4);
-    print('beacon4 added?');
+    CCISBeacons ccisBeacons = CCISBeacons();
+    ccisBeacons.initListOfBeacons();
     print("length of Gbeacons is ${ccisBeacons.GBeacons.length}");
 
     FlutterBluePlus.startScan(timeout: Duration(seconds: 3));
@@ -40,32 +27,25 @@ class Location {
     FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
         // Step 1: Take the scanned ble signal that come from our devices ONLY
-        print('before step1');
-print(!devices.contains(result.device)); // returned true 
-print(ccisBeacons.hasBeacon(result.device.remoteId.toString()));
-print(result.device.remoteId.toString());
-
-print('TESTING fay');
         if (!devices.contains(result.device) &&
             ccisBeacons.hasBeacon(result.device.remoteId.toString())) {
           devices.add(result.device);
-          print('in step1');
 
           // Step 2: Store RSSI value associated with its beacon ID
           int rssi = result.rssi;
           String beaconId = result.device.remoteId.toString();
           rssiValues[beaconId] = rssi;
+          Beacon scannedBeacon =
+              ccisBeacons.getBeacon(result.device.remoteId.toString());
+          scannedBeacons.add(scannedBeacon);
+          print("scannedBeacons length  ${scannedBeacons.length}");
           print(
               "beaconId:  $beaconId  rssi:   $rssi   rssiValues length:  ${rssiValues.length}");
-          print('in step2');
-
 
           // Step 3: Convert RSSI values to distances
           rssiValues.forEach((beaconId, rssi) {
             num distance = calculateDistance(rssi);
             distances[beaconId] = distance.toDouble();
-            print('in step3');
-
 
             print(
                 "distance  $distance    of beacon :   $beaconId      of rssi:   $rssi");
@@ -78,12 +58,11 @@ print('TESTING fay');
           });
 
           //Step 4: After having enough data perform trilateration
-          if (rssiValues.length >= 1) {
-            LatLng userLocation = trilaterate(distances, ccisBeacons.GBeacons);
-            print('Estimated User Location: $userLocation');
+          if (rssiValues.length >= 3) {
+            LatLng userLocation = trilaterate(distances, scannedBeacons);
+            print('Estimated User Location in Currentloc class: $userLocation');
             currentLocation = userLocation;
             FlutterBluePlus.stopScan();
-            print('inside step4');
             break;
           }
         }
@@ -150,6 +129,7 @@ print('TESTING fay');
       List<vec.Vector2> beacons, List<double> distances) {
     // Check if the number of beacons and distances match
     if (beacons.length != distances.length) {
+      print("مقلب");
       return null; // Unable to perform trilateration
     }
 
