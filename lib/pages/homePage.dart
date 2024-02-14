@@ -11,6 +11,8 @@ class HomePage extends StatelessWidget {
     );
   }
 }*/import 'package:flutter/material.dart';
+import 'package:mishkat/pages/OtpVerfication.dart';
+import 'package:mishkat/pages/phonNumberPage.dart'; 
 
 class HomePage extends StatelessWidget {
   @override
@@ -66,14 +68,35 @@ class HomePage extends StatelessWidget {
                   child: TextField(
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      labelText: 'Enter your mobile number',
+                      labelText: '+966 5XXXXXXXX',
                       border: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: Colors.blue, // Border color
+                          color: Color.fromARGB(255, 184, 214, 239), // Border color
                         ),
                       ),
                       filled: true,
-                      fillColor: Colors.lightBlue[100], // Background color
+                      fillColor: Color(0xFFF1F4FF),
+                    ),
+                  ),
+                
+                ),
+               
+
+                   SizedBox(height: 20), // Add some space between the text field and the button
+                SizedBox(
+                  width: 290, // Set width to 39 pixels
+                  height: 50, // Set height to 603 pixels
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Navigate to OtpVerification page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PhoneNumberPage() ),
+                      );                    },
+                    child: Text('Sign in'),
+                    style: ElevatedButton.styleFrom(
+                     primary: Color(0xFF09186C),
+                    onPrimary: Colors.white,
                     ),
                   ),
                 ),
@@ -85,4 +108,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
