@@ -426,7 +426,7 @@ late LatLng tappedLocation;
                        _buildButton("Directions", Icons.directions_outlined, onTap: () {
   setState(() {
     shortestPath = [];
-    polygons.clear();  // Clear any existing paths
+   // polygons.clear();  // Clear any existing paths
   });
   // Trigger shortest path calculation
   _calculateShortestPath();
@@ -927,7 +927,7 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
    // Helper method to display the shortest path on the map
   void _displayShortestPath(List<LatLng> shortestPath) {
     // Clear existing markers or overlays related to paths
-    polygons.clear();
+   // polygons.clear();
 
     // Draw the path on the map
     if (shortestPath.isNotEmpty) {

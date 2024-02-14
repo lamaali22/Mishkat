@@ -5,7 +5,7 @@ class CCISBeacons {
   //get these from the DB for testing purposes only
   List<Map<String, LatLng>> GBeacons_testing = [
     {'C3:00:00:16:F6:6B': LatLng(1.0, 2.0)}, // Beacon 1
-    {'key2': LatLng(4.0, 2.0)}, // Beacon 2
+    {'C3:00:00:16:F6:6A': LatLng(4.0, 2.0)}, // Beacon 2
     {'key3': LatLng(4.0, 2.0)}, // Beacon 3
     {'key4': LatLng(4.0, 2.0)}, // Beacon 4
     {'key5': LatLng(4.0, 2.0)}, // Beacon 5
@@ -28,6 +28,7 @@ class CCISBeacons {
   bool hasBeacon(String id) {
     for (int i = 0; i < GBeacons.length; i++) {
       Beacon b = GBeacons[i];
+      print(b);
       if (b.id == id) {
         print("Does a beacon with ${id} exist in the list of G Beacons? true");
         return true;

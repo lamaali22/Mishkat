@@ -26,9 +26,13 @@ class Location {
         Beacon("C3:00:00:16:F6:66", LatLng(24.7231500, 46.6366913));
     Beacon beacon3 =
         Beacon("C3:00:00:16:F6:E1", LatLng(24.7231656, 46.6364553));
+    Beacon beacon4 =
+        Beacon("C3:00:00:16:F6:6A", LatLng(24.723095446369882, 46.63696832269832));
     ccisBeacons.GBeacons.add(beacon1);
     ccisBeacons.GBeacons.add(beacon2);
     ccisBeacons.GBeacons.add(beacon3);
+    ccisBeacons.GBeacons.add(beacon4);
+    print('beacon4 added?');
     print("length of Gbeacons is ${ccisBeacons.GBeacons.length}");
 
     FlutterBluePlus.startScan(timeout: Duration(seconds: 3));
@@ -36,9 +40,16 @@ class Location {
     FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
         // Step 1: Take the scanned ble signal that come from our devices ONLY
+        print('before step1');
+print(!devices.contains(result.device)); // returned true 
+print(ccisBeacons.hasBeacon(result.device.remoteId.toString()));
+print(result.device.remoteId.toString());
+
+print('TESTING fay');
         if (!devices.contains(result.device) &&
             ccisBeacons.hasBeacon(result.device.remoteId.toString())) {
           devices.add(result.device);
+          print('in step1');
 
           // Step 2: Store RSSI value associated with its beacon ID
           int rssi = result.rssi;
@@ -46,11 +57,15 @@ class Location {
           rssiValues[beaconId] = rssi;
           print(
               "beaconId:  $beaconId  rssi:   $rssi   rssiValues length:  ${rssiValues.length}");
+          print('in step2');
+
 
           // Step 3: Convert RSSI values to distances
           rssiValues.forEach((beaconId, rssi) {
             num distance = calculateDistance(rssi);
             distances[beaconId] = distance.toDouble();
+            print('in step3');
+
 
             print(
                 "distance  $distance    of beacon :   $beaconId      of rssi:   $rssi");
@@ -63,11 +78,12 @@ class Location {
           });
 
           //Step 4: After having enough data perform trilateration
-          if (rssiValues.length >= 3) {
+          if (rssiValues.length >= 1) {
             LatLng userLocation = trilaterate(distances, ccisBeacons.GBeacons);
             print('Estimated User Location: $userLocation');
             currentLocation = userLocation;
             FlutterBluePlus.stopScan();
+            print('inside step4');
             break;
           }
         }
