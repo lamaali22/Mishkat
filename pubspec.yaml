@@ -51,9 +51,6 @@ dependencies:
   dart_numerics: ^0.0.6
   dijkstra: ^0.0.4
 
-
-  
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
