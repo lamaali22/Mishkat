@@ -808,17 +808,19 @@ class _MapScreenState extends State<MapScreen> {
   late Timer scanningTimer;
   void periodicStartScanning() {
     Future.delayed(Duration(seconds: 2), () {
-      scanningTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      scanningTimer = Timer.periodic(Duration(seconds: 7), (timer) {
         location.startScanning();
         scanningCounter++;
         print("scanningCounter $scanningCounter");
         Future.delayed(Duration(seconds: 4), () {
           // if no ble signals
           if (location.currentLocation == LatLng(0, 0)) {
+            print("checking sgnal 1");
             // wait for 15 more seconds
-            Future.delayed(Duration(seconds: 15), () {
+            Future.delayed(Duration(seconds: 30), () {
               //if there is still no signals
               if (location.currentLocation == LatLng(0, 0)) {
+                print("checking sgnal 2");
                 print("currentLocaoitn is in first check  0,0");
                 showNoSignalAvailable(context);
               } //if signals were detected after 15 seconds

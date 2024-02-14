@@ -25,16 +25,44 @@ class CCISBeacons {
 
   List<Beacon> GBeacons = [];
 
+  initListOfBeacons() {
+    Beacon beacon1 =
+        Beacon("C3:00:00:16:F6:6B", LatLng(24.7231574, 46.6368442));
+    Beacon beacon2 =
+        Beacon("C3:00:00:16:F6:66", LatLng(24.7231500, 46.6366913));
+    Beacon beacon3 =
+        Beacon("C3:00:00:16:F6:E1", LatLng(24.7231656, 46.6364553));
+    Beacon beacon4 = Beacon(
+        "C3:00:00:16:F6:6A", LatLng(24.723095446369882, 46.63696832269832));
+    GBeacons.add(beacon1);
+    GBeacons.add(beacon2);
+    GBeacons.add(beacon3);
+    GBeacons.add(beacon4);
+  }
+
   bool hasBeacon(String id) {
     for (int i = 0; i < GBeacons.length; i++) {
       Beacon b = GBeacons[i];
       if (b.id == id) {
         print("Does a beacon with ${id} exist in the list of G Beacons? true");
+        print("the loop is ${i}");
         return true;
       }
     }
     print("Does a beacon with ${id} exist in the list of G Beacons? false");
     return false;
+  }
+
+  Beacon getBeacon(String id) {
+    Beacon beacon = GBeacons.first;
+    for (int i = 0; i < GBeacons.length; i++) {
+      Beacon b = GBeacons[i];
+      if (b.id == id) {
+        beacon = b;
+        return beacon;
+      }
+    }
+    return beacon;
   }
 
   Future<void> fetchBeaconsFromFirebase() async {
