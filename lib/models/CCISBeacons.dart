@@ -26,12 +26,12 @@ class CCISBeacons {
   List<Beacon> GBeacons = [];
 
   initListOfBeacons() {
-    Beacon beacon1 =
-        Beacon("C3:00:00:16:F6:6B", LatLng(24.7231574, 46.6368442));
-    Beacon beacon2 =
-        Beacon("C3:00:00:16:F6:66", LatLng(24.7231500, 46.6366913));
-    Beacon beacon3 =
-        Beacon("C3:00:00:16:F6:E1", LatLng(24.7231656, 46.6364553));
+    Beacon beacon1 = Beacon(
+        "C3:00:00:16:F6:6B", LatLng(24.723071148477818, 46.636889096263474));
+    Beacon beacon2 = Beacon(
+        "C3:00:00:16:F6:66", LatLng(24.72307177325717, 46.63684508137437));
+    Beacon beacon3 = Beacon(
+        "C3:00:00:16:F6:E1", LatLng(24.723071391840826, 46.636719925762044));
     Beacon beacon4 = Beacon(
         "C3:00:00:16:F6:6A", LatLng(24.723095446369882, 46.63696832269832));
     GBeacons.add(beacon1);

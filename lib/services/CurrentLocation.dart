@@ -20,12 +20,14 @@ class Location {
     // --   for trsting purposes only  --
     CCISBeacons ccisBeacons = CCISBeacons();
     ccisBeacons.initListOfBeacons();
+
     print("length of Gbeacons is ${ccisBeacons.GBeacons.length}");
 
     FlutterBluePlus.startScan(timeout: Duration(seconds: 3));
 
     FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
+        print("rssi ${result.device.remoteId}");
         // Step 1: Take the scanned ble signal that come from our devices ONLY
         if (!devices.contains(result.device) &&
             ccisBeacons.hasBeacon(result.device.remoteId.toString())) {
