@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(), //const MapScreen(title: 'Flutter Map GeoJson Demo'),
+      home: ProfileSettingsList(), //const MapScreen(title: 'Flutter Map GeoJson Demo'),
     );
   }
   
