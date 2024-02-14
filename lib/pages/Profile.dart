@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mishkat/pages/EditProfile.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 import 'package:mishkat/firebase_options.dart';
+import 'package:mishkat/pages/homePage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,12 +64,82 @@ class _ProfileSettingsList extends State<ProfileSettingsList> {
   }
 
   void handleSignout() async {
-    print("signing out");
-  }
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Confirm Sign Out"),
+        content: Text("Are you sure you want to sign out?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close the dialog
+              try {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                );
+              } catch (e) {
+                print("Error signing out: $e");
+                // Handle error gracefully, show snackbar, etc.
+              }
+            },
+            child: Text("Sign Out"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   void handleDeleteAccount() async {
-    print("Deleting Account");
-  }
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Confirm Delete Account"),
+        content: Text("Are you sure you want to delete your account? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close the dialog
+              // Show a configuration message
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Deleting account...'),
+                duration: Duration(seconds: 1), // Adjust duration as needed
+              ));
+              try {
+                // Delete the user's account
+                await FirebaseAuth.instance.currentUser?.delete();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()), // Replace with appropriate route
+                );
+              } catch (e) {
+                print("Error deleting account: $e");
+                // Handle error gracefully, show snackbar, etc.
+              }
+            },
+            child: Text("Delete"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   void handleItemSelected(Map<String, dynamic> selectedItem) {
     String text = selectedItem["text"];
