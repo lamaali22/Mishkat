@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mishkat/pages/EditProfile.dart';
+import 'package:mishkat/pages/Profile.dart';
 import 'package:mishkat/pages/homePage.dart';
 import 'package:mishkat/pages/mapView.dart';
 import 'package:mishkat/pages/phonNumberPage.dart';
@@ -27,7 +29,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: PhoneNumberPage(), //const MapScreen(title: 'Flutter Map GeoJson Demo'),
+      home: HomePage(), //const MapScreen(title: 'Flutter Map GeoJson Demo'),
     );
   }
   
