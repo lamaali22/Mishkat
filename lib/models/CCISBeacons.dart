@@ -44,7 +44,7 @@ class CCISBeacons {
     for (int i = 0; i < GBeacons.length; i++) {
       Beacon b = GBeacons[i];
       if (b.id == id) {
-        print("Does a beacon with ${id} exist in the list of G Beacons? true");
+        print("Does a beacon with ${b.id} exist in the list of G Beacons? true");
         print("the loop is ${i}");
         return true;
       }

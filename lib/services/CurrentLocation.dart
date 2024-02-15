@@ -21,15 +21,25 @@ class Location {
     CCISBeacons ccisBeacons = CCISBeacons();
     ccisBeacons.initListOfBeacons();
     print("length of Gbeacons is ${ccisBeacons.GBeacons.length}");
+    print("list of Gbeacons is ${ccisBeacons.GBeacons.toString()}");
+        for (Beacon beacon in ccisBeacons.GBeacons) {
+      print('Beacon id: ${beacon.id}, RSSI: ${beacon.coordinates}');
+    }
+
+
 
     FlutterBluePlus.startScan(timeout: Duration(seconds: 3));
 
     FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult result in results) {
+        print('rssi ${result.device.remoteId}');
         // Step 1: Take the scanned ble signal that come from our devices ONLY
         if (!devices.contains(result.device) &&
             ccisBeacons.hasBeacon(result.device.remoteId.toString())) {
           devices.add(result.device);
+print('in step1 ' );
+print(!devices.contains(result.device));
+print(ccisBeacons.hasBeacon(result.device.remoteId.toString()));
 
           // Step 2: Store RSSI value associated with its beacon ID
           int rssi = result.rssi;
@@ -58,7 +68,7 @@ class Location {
           });
 
           //Step 4: After having enough data perform trilateration
-          if (rssiValues.length >= 3) {
+          if (rssiValues.length >= 1) {
             LatLng userLocation = trilaterate(distances, scannedBeacons);
             print('Estimated User Location in Currentloc class: $userLocation');
             currentLocation = userLocation;

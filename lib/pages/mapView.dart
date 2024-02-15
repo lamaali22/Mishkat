@@ -899,7 +899,7 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
               height: 50.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.blue.withOpacity(0.28),
+                color: Colors.red.withOpacity(0.28),
               ),
             ),
             Container(
@@ -921,14 +921,15 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     if (userLocationMarker == null) {
       // Move the camera to the user's location
       mapController.move(userLocation, 20.0);
+      print("userloaction is null");
     }
   }
 
-   // Helper method to display the shortest path on the map
+   //Helper method to display the shortest path on the map
   void _displayShortestPath(List<LatLng> shortestPath) {
     // Clear existing markers or overlays related to paths
-   // polygons.clear();
-
+   polygons.clear();
+  print ('shortest path is not empty? ${shortestPath.isNotEmpty}');
     // Draw the path on the map
     if (shortestPath.isNotEmpty) {
       // Create a Polygon to represent the path
@@ -951,6 +952,7 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     }
   }
 
+
   // Helper method to calculate the center of the path
   LatLng calculateCenterOfPath(List<LatLng> path) {
     double sumLat = 0.0;
@@ -967,31 +969,55 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     return LatLng(avgLat, avgLng);
   }
 
+// Helper method to check if a point is clear (not above the block)
+bool _isPointClear(LatLng point) {
+  // Example condition: Check if the latitude is below a certain threshold
+  // You should replace this condition with your actual logic
+  return point.latitude < 10.0; // Adjust the threshold as needed
+}
+
 void _calculateShortestPath() {
+  print('inside calculateshortest path');
   // Ensure there is a user location and a tapped location
   if (userLocationMarker == null || tappedLocation == null) {
+    print('userlocation is null ? ${userLocationMarker == null}');
+    print('tappedlocation is null ? ${tappedLocation == null}');
     return;
   }
 
   // Create an IndoorGraph with vertices as LatLng points
   IndoorGraph graph = IndoorGraph({}, {});
-
-  // Add user location and tapped location as nodes
-  graph.addNode("user", userLocationMarker!.point);
-  graph.addNode("tapped", tappedLocation);
+  print('graph is here ${graph.nodes}');
+print(graph);
+ // Add user location and tapped location as nodes
+print('User location marker: ${userLocationMarker!.point}');
+print('Tapped location: $tappedLocation');
+graph.addNode("user", userLocationMarker!.point);
+graph.addNode("tapped", tappedLocation);
 
   // Add edges between the vertices based on your map data
-  // Modify this part based on your actual map data and structure
-  for (Polygon polygon in polygons) {
-    for (LatLng point in polygon.points) {
+// Modify this part based on your actual map data and structure
+for (Polygon polygon in polygons) {
+  for (LatLng point in polygon.points) {
+    // Check if the point is clear (not above the block)
+    //if (_isPointClear(point)) {
+      print('Adding node and connection for point: $point');
       graph.addNode(point.toString(), point);
       graph.addConnection("user", point.toString());
       graph.addConnection("tapped", point.toString());
-    }
+   // }
   }
+}
+
+  print('graph is here3 ${graph.nodes}');
 
   // Calculate the shortest path using Dijkstra's algorithm
   DijkstraResult result = dijkstra(graph, "user", "tapped");
+ if (result == null) {
+    print('Error: Dijkstra result is null');
+    return;
+  }
+   print('Dijkstra result: $result');
 
   // Extract the calculated shortest path as LatLng points
   List<LatLng> calculatedShortestPath = result.previousNodes.keys
@@ -999,14 +1025,17 @@ void _calculateShortestPath() {
       .map((node) => graph.nodes[node]!)
       .toList();
 
-  setState(() {
+ if (calculatedShortestPath.isEmpty) {
+    print('Error: Calculated shortest path is empty');
+    return;
+  }
+    setState(() {
     shortestPath = calculatedShortestPath;
   });
 
   // Display the shortest path on the map
   _displayShortestPath(shortestPath);
 }
-
 
 
 }
