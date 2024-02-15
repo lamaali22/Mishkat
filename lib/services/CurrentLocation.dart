@@ -20,6 +20,7 @@ class Location {
     // --   for trsting purposes only  --
     CCISBeacons ccisBeacons = CCISBeacons();
     ccisBeacons.initListOfBeacons();
+
     print("length of Gbeacons is ${ccisBeacons.GBeacons.length}");
     print("list of Gbeacons is ${ccisBeacons.GBeacons.toString()}");
         for (Beacon beacon in ccisBeacons.GBeacons) {

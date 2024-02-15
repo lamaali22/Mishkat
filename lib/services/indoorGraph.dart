@@ -42,7 +42,8 @@ DijkstraResult dijkstra(IndoorGraph graph, String start, String end) {
     unvisited.remove(current);
 
     for (var neighbor in graph.connections[current] ?? []) {
-      double alt = distances[current]! + _calculateDistance(current, neighbor, graph);
+      double alt =
+          distances[current]! + _calculateDistance(current, neighbor, graph);
 
       if (alt < distances[neighbor]!) {
         distances[neighbor] = alt;
@@ -53,10 +54,14 @@ DijkstraResult dijkstra(IndoorGraph graph, String start, String end) {
 
   List<String> path = [];
   String? current = end;
-
   while (current != start) {
-    path.add(current!);
-    current = previous[current!];
+    if (current == null) {
+      // Handle the case where no path is found
+      print("No valid path found!");
+      break;
+    }
+    path.add(current);
+    current = previous[current];
   }
 
   path.add(start);
@@ -94,7 +99,10 @@ double _calculateDistance(String start, String end, IndoorGraph graph) {
   double dLon = degreesToRadians(lon2 - lon1);
 
   double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(degreesToRadians(lat1)) * math.cos(degreesToRadians(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
+      math.cos(degreesToRadians(lat1)) *
+          math.cos(degreesToRadians(lat2)) *
+          math.sin(dLon / 2) *
+          math.sin(dLon / 2);
 
   double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
