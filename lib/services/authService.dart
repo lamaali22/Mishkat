@@ -21,6 +21,7 @@ class AuthService {
 
   Future<bool> verifyOTP(
       String phoneNumber, String otp, String verificationId) async {
+    print("verifyOTP");
     try {
       // Verify OTP using Firebase Authentication
       PhoneAuthCredential credential = PhoneAuthProvider.credential(

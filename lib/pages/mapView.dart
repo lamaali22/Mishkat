@@ -11,7 +11,7 @@ import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
 import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
-import 'package:mishkat/services/indoorGraph.dart' ;
+import 'package:mishkat/services/indoorGraph.dart';
 import 'package:mishkat/services/pathFindingHelper.dart';
 import 'package:mishkat/widgets/Messages.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
@@ -56,7 +56,6 @@ class _MapScreenState extends State<MapScreen> {
   LatLng userLocation = LatLng(24.7231, 46.63682222);
   Location location = Location();
   List<LatLng> shortestPath = [];
-
 
   _MapScreenState()
       : mapController = MapController(),
@@ -275,7 +274,8 @@ class _MapScreenState extends State<MapScreen> {
       }
     }
   }
-late LatLng tappedLocation;
+
+  late LatLng tappedLocation;
 
   Future<void> _handleLabelTap(
       String roomId, String type, LatLng position) async {
@@ -285,7 +285,6 @@ late LatLng tappedLocation;
     String closeTime = "";
     bool isAvailable = await _isRoomAvailable(roomId, type);
     tappedLocation = position;
-
 
     if (type == 'service') {
       try {
@@ -310,7 +309,7 @@ late LatLng tappedLocation;
         print('Error fetching data: $e');
       }
       // Trigger shortest path calculation
-     // _calculateShortestPath();
+      // _calculateShortestPath();
     }
 
     // Show a dialog at the bottom of the screen
@@ -423,16 +422,15 @@ late LatLng tappedLocation;
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                       _buildButton("Directions", Icons.directions_outlined, onTap: () {
-  setState(() {
-    shortestPath = [];
-   // polygons.clear();  // Clear any existing paths
-  });
-  // Trigger shortest path calculation
-  _calculateShortestPath();
-}),
-
-
+                      _buildButton("Directions", Icons.directions_outlined,
+                          onTap: () {
+                        setState(() {
+                          shortestPath = [];
+                          // polygons.clear();  // Clear any existing paths
+                        });
+                        // Trigger shortest path calculation
+                        _calculateShortestPath();
+                      }),
                       _buildButton("Save", Icons.bookmark_outline_outlined),
                       _buildButton("Favorite", Icons.star_border_outlined),
                       _buildButton("Share", Icons.ios_share),
@@ -488,7 +486,7 @@ late LatLng tappedLocation;
     mapController.move(position, 21.0);
   }
 
- Future<bool> _isRoomAvailable(String roomId, String type) async {
+  Future<bool> _isRoomAvailable(String roomId, String type) async {
     DateTime now = DateTime.now();
     print("now: $now");
 
@@ -737,52 +735,51 @@ late LatLng tappedLocation;
     );
   }
 
-Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
-  Color buttonColor;
-  Color textColor;
-  Color iconColor;
+  Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
+    Color buttonColor;
+    Color textColor;
+    Color iconColor;
 
-  if (label == "Directions") {
-    buttonColor = const Color.fromARGB(255, 9, 24, 108);
-    textColor = Colors.white;
-    iconColor = Colors.white;
-  } else {
-    buttonColor = const Color.fromARGB(255, 229, 237, 255);
-    textColor = const Color.fromARGB(255, 9, 24, 108);
-    iconColor = const Color.fromARGB(255, 9, 24, 108);
-  }
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-    child: Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap, // Use the provided onTap callback
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 9.0),
-          decoration: BoxDecoration(
-            color: buttonColor,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: textColor,
-                  fontFamily: 'Poppins',
-                ), // Adjust label color
-              ),
-              const SizedBox(width: 7.0),
-              Icon(icon, color: iconColor), // Adjust icon color
-            ],
+    if (label == "Directions") {
+      buttonColor = const Color.fromARGB(255, 9, 24, 108);
+      textColor = Colors.white;
+      iconColor = Colors.white;
+    } else {
+      buttonColor = const Color.fromARGB(255, 229, 237, 255);
+      textColor = const Color.fromARGB(255, 9, 24, 108);
+      iconColor = const Color.fromARGB(255, 9, 24, 108);
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap, // Use the provided onTap callback
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 9.0),
+            decoration: BoxDecoration(
+              color: buttonColor,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: textColor,
+                    fontFamily: 'Poppins',
+                  ), // Adjust label color
+                ),
+                const SizedBox(width: 7.0),
+                Icon(icon, color: iconColor), // Adjust icon color
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Color _parseColor(String colorString) {
     // Check if the color string is in the valid format
@@ -921,16 +918,18 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     if (userLocationMarker == null) {
       // Move the camera to the user's location
       mapController.move(userLocation, 20.0);
+      print('userlocation is null');
     }
   }
 
-   // Helper method to display the shortest path on the map
+  // Helper method to display the shortest path on the map
   void _displayShortestPath(List<LatLng> shortestPath) {
     // Clear existing markers or overlays related to paths
-   // polygons.clear();
+    // polygons.clear();
 
     // Draw the path on the map
     if (shortestPath.isNotEmpty) {
+      print('shortestpath is not empty');
       // Create a Polygon to represent the path
       final pathPolygon = Polygon(
         points: shortestPath,
@@ -967,46 +966,44 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     return LatLng(avgLat, avgLng);
   }
 
-void _calculateShortestPath() {
-  // Ensure there is a user location and a tapped location
-  if (userLocationMarker == null || tappedLocation == null) {
-    return;
-  }
-
-  // Create an IndoorGraph with vertices as LatLng points
-  IndoorGraph graph = IndoorGraph({}, {});
-
-  // Add user location and tapped location as nodes
-  graph.addNode("user", userLocationMarker!.point);
-  graph.addNode("tapped", tappedLocation);
-
-  // Add edges between the vertices based on your map data
-  // Modify this part based on your actual map data and structure
-  for (Polygon polygon in polygons) {
-    for (LatLng point in polygon.points) {
-      graph.addNode(point.toString(), point);
-      graph.addConnection("user", point.toString());
-      graph.addConnection("tapped", point.toString());
+  void _calculateShortestPath() {
+    // Ensure there is a user location and a tapped location
+    if (userLocationMarker == null || tappedLocation == null) {
+      print("userlocation and tappedlocation is null");
+      return;
     }
+
+    // Create an IndoorGraph with vertices as LatLng points
+    IndoorGraph graph = IndoorGraph({}, {});
+
+    // Add user location and tapped location as nodes
+    graph.addNode("user", userLocationMarker!.point);
+    graph.addNode("tapped", tappedLocation);
+
+    // Add edges between the vertices based on your map data
+    // Modify this part based on your actual map data and structure
+    for (Polygon polygon in polygons) {
+      for (LatLng point in polygon.points) {
+        graph.addNode(point.toString(), point);
+        graph.addConnection("user", point.toString());
+        graph.addConnection("tapped", point.toString());
+      }
+    }
+
+    // Calculate the shortest path using Dijkstra's algorithm
+    DijkstraResult result = dijkstra(graph, "user", "tapped");
+
+    // Extract the calculated shortest path as LatLng points
+    List<LatLng> calculatedShortestPath = result.previousNodes.keys
+        .where((node) => result.previousNodes[node] != null)
+        .map((node) => graph.nodes[node]!)
+        .toList();
+
+    setState(() {
+      shortestPath = calculatedShortestPath;
+    });
+
+    // Display the shortest path on the map
+    _displayShortestPath(shortestPath);
   }
-
-  // Calculate the shortest path using Dijkstra's algorithm
-  DijkstraResult result = dijkstra(graph, "user", "tapped");
-
-  // Extract the calculated shortest path as LatLng points
-  List<LatLng> calculatedShortestPath = result.previousNodes.keys
-      .where((node) => result.previousNodes[node] != null)
-      .map((node) => graph.nodes[node]!)
-      .toList();
-
-  setState(() {
-    shortestPath = calculatedShortestPath;
-  });
-
-  // Display the shortest path on the map
-  _displayShortestPath(shortestPath);
-}
-
-
-
 }

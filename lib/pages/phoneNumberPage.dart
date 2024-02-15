@@ -18,13 +18,13 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
       return;
     }
 
-    if (!RegExp(r'^[0-9]{10}$').hasMatch(phoneNumber)) {
+    if (!RegExp(r'^[0-9]{9}$').hasMatch(phoneNumber)) {
       _showSnackbar('Please enter a valid 10-digit phone number.');
       return;
     }
 
     phoneNumber = '+966$phoneNumber'; // Adjust the country code as needed
-
+    print("Phonemun is: $phoneNumber");
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phoneNumber,

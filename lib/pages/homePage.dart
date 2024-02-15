@@ -14,11 +14,69 @@ class HomePage extends StatelessWidget {
 
 import 'dart:collection';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mishkat/pages/otpVerification.dart';
 import 'package:mishkat/pages/phoneNumberPage.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePage createState() => _HomePage();
+}
+
+class _HomePage extends State<HomePage> {
+  final TextEditingController phoneNumberController = TextEditingController();
+  Future<void> _verifyPhoneNumber() async {
+    String phoneNumber = phoneNumberController.text.trim();
+
+    if (phoneNumber.isEmpty) {
+      _showSnackbar('Please enter a phone number.');
+      return;
+    }
+
+    if (!RegExp(r'^[0-9]{9}$').hasMatch(phoneNumber)) {
+      _showSnackbar('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
+    phoneNumber = '+966$phoneNumber'; // Adjust the country code as needed
+    print("Phonemun is: $phoneNumber");
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-retrieval or instant verification completed successfully
+          // Sign in the user with the credential
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          _showSnackbar(
+              'User signed in automatically: ${FirebaseAuth.instance.currentUser?.uid}');
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          // Verification failed, handle the error
+          _showSnackbar('Phone number verification failed: $e');
+        },
+        codeSent: (String verificationId, int? resendToken) async {
+          // Code has been sent to the provided phone number
+          // Navigate to OTP verification page
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          // Auto-retrieval timeout, handle the situation
+          _showSnackbar(
+              'Auto-retrieval timeout. Verification ID: $verificationId');
+        },
+        timeout: Duration(seconds: 60), // Set the timeout for verification
+      );
+    } catch (e) {
+      // Handle other errors
+      _showSnackbar('Error during phone number verification: $e');
+    }
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,11 +153,6 @@ class HomePage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       // Navigate to OtpVerification page
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => PhoneNumberPage()),
-                      );
                     },
                     child: Text('Sign in'),
                     style: ElevatedButton.styleFrom(
