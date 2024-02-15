@@ -23,7 +23,7 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
       return;
     }
 
-    phoneNumber = '+91$phoneNumber'; // Adjust the country code as needed
+    phoneNumber = '+966$phoneNumber'; // Adjust the country code as needed
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -32,7 +32,8 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
           // Auto-retrieval or instant verification completed successfully
           // Sign in the user with the credential
           await FirebaseAuth.instance.signInWithCredential(credential);
-          _showSnackbar('User signed in automatically: ${FirebaseAuth.instance.currentUser?.uid}');
+          _showSnackbar(
+              'User signed in automatically: ${FirebaseAuth.instance.currentUser?.uid}');
         },
         verificationFailed: (FirebaseAuthException e) {
           // Verification failed, handle the error
@@ -50,7 +51,8 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           // Auto-retrieval timeout, handle the situation
-          _showSnackbar('Auto-retrieval timeout. Verification ID: $verificationId');
+          _showSnackbar(
+              'Auto-retrieval timeout. Verification ID: $verificationId');
         },
         timeout: Duration(seconds: 60), // Set the timeout for verification
       );
@@ -61,9 +63,9 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
   }
 
   void _showSnackbar(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-}
-
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +121,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      _showSnackbar('User signed in with OTP: ${FirebaseAuth.instance.currentUser?.uid}');
+      _showSnackbar(
+          'User signed in with OTP: ${FirebaseAuth.instance.currentUser?.uid}');
 
       // Navigate to the next screen or perform necessary actions
     } catch (e) {
@@ -128,10 +131,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
   }
 
- void _showSnackbar(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-}
-
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {

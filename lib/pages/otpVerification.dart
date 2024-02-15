@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mishkat/pages/home_page.dart';
+import 'package:mishkat/pages/homePage.dart';
 import 'package:mishkat/services/authService.dart';
-
 
 class OtpVerificationPage extends StatelessWidget {
   final String phoneNumber;
@@ -31,12 +30,15 @@ class OtpVerificationPage extends StatelessWidget {
                 String otp = otpController.text;
 
                 // Get the verificationId passed from PhoneNumberPage
-                String verificationId = ModalRoute.of(context)!.settings.arguments as String;
-print('in otp');
-                bool isVerified = await AuthService().verifyOTP(phoneNumber, otp, verificationId);
+                String verificationId =
+                    ModalRoute.of(context)!.settings.arguments as String;
+                print('in otp');
+                bool isVerified = await AuthService()
+                    .verifyOTP(phoneNumber, otp, verificationId);
 
                 // Checking if the user exists in Firestore
-                bool userExistsAfterVerification = await AuthService().checkIfUserExists(phoneNumber);
+                bool userExistsAfterVerification =
+                    await AuthService().checkIfUserExists(phoneNumber);
 
                 if (isVerified) {
                   if (userExistsAfterVerification) {
