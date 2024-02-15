@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mishkat/pages/EditProfile.dart';
+import 'package:mishkat/pages/home_page.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 import 'package:mishkat/firebase_options.dart';
 
@@ -61,13 +63,162 @@ class _ProfileSettingsList extends State<ProfileSettingsList> {
     print("My classes");
   }
 
-  void handleSignout() async {
-    print("signing out");
-  }
+void handleSignout(BuildContext context) async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Color.fromARGB(255, 242, 243, 247),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+          side: BorderSide(
+            color: Colors.transparent,
+          ),
+        ),
+        title: Text("Confirm Sign Out"),
+        content: Text("Are you sure you want to sign out?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Container(
+              width: 100,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.white,
+              ),
+              child: Text(
+                "Cancel",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                color: Color.fromARGB(255, 35, 51, 143),
+                ),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close the dialog
+              try {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                );
+              } catch (e) {
+                print("Error signing out: $e");
+                // Handle error gracefully, show snackbar, etc.
+              }
+            },
+            child: Container(
+              width: 100,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.white,
+              ),
+              child: Text(
+                "Sign Out",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                color: Color.fromARGB(255, 35, 51, 143),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
 
-  void handleDeleteAccount() async {
-    print("Deleting Account");
-  }
+void handleDeleteAccount(BuildContext context) async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Color.fromARGB(255, 242, 243, 247),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+          side: BorderSide(
+            color: Colors.transparent,
+          ),
+        ),
+        title: Text("Confirm Delete Account"),
+        content: Text("Are you sure you want to delete your account? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Container(
+              width: 100,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Color.fromARGB(255, 207, 214, 255),
+              ),
+              child: Text(
+                "Cancel",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                color: Color.fromARGB(255, 35, 51, 143),
+                ),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close the dialog
+              // Show a configuration message
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Deleting account...'),
+                duration: Duration(seconds: 1), // Adjust duration as needed
+              ));
+              try {
+                // Delete the user's account
+                await FirebaseAuth.instance.currentUser?.delete();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()), // Replace with appropriate route
+                );
+              } catch (e) {
+                print("Error deleting account: $e");
+                // Handle error gracefully, show snackbar, etc.
+              }
+            },
+            child: Container(
+              width: 100,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.red,
+              ),
+              child: Text(
+                "Delete",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void handleItemSelected(Map<String, dynamic> selectedItem) {
     String text = selectedItem["text"];
@@ -84,10 +235,10 @@ class _ProfileSettingsList extends State<ProfileSettingsList> {
         handleMyClasses();
         break;
       case "Signout":
-        handleSignout();
+        handleSignout(context);
         break;
       case "Delete Account":
-        handleDeleteAccount();
+        handleDeleteAccount(context);
         break;
       default:
         print("Invalid selection");
