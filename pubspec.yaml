@@ -45,7 +45,15 @@ dependencies:
   google_maps_flutter: ^2.5.3
   geojson_vi: ^2.2.1
   firebase_auth: ^4.16.0
-
+  country_picker: ^2.0.23
+  firebase_storage: ^11.6.0
+  shared_preferences: ^2.2.2
+  provider: ^6.1.1
+  pinput: ^4.0.0
+  google_fonts: ^4.0.4
+  pin_code_fields: ^8.0.1
+  permission_handler: ^11.0.1
+  dart_numerics: ^0.0.6
 
   
 
@@ -68,6 +76,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/map.geojson
+    - assets/logo.png
   
 
 

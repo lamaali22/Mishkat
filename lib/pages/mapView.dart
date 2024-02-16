@@ -64,9 +64,10 @@ class _MapScreenState extends State<MapScreen> {
                 child: FlutterMap(
                   mapController: mapController,
                   options: MapOptions(
-                    center: LatLng(24.72337, 46.63664),
+                    center: LatLng(24.72336, 46.63626),
                     minZoom: 14.0,
-                    zoom: 19,
+                    zoom: 19.3,
+                    rotation: 57 * pi / 2, //new code
                   ),
                   children: [
                     TileLayer(
@@ -163,82 +164,86 @@ class _MapScreenState extends State<MapScreen> {
           //   await _updateServiceCoordinates(roomId, labelPosition);
           setState(() {
             // Add Marker for label
-            polygonLabels.add(Marker(
-              point: labelPosition,
-              builder: (ctx) => GestureDetector(
-                onTap: () {
-                  // Handle tap on the label
-                  if (feature['properties']['type'] != null) {
-                    _handleLabelTap(roomId, type, labelPosition);
-                  }
-                },
-                child: Transform.translate(
-                  //11goes down and the 3 left and right
-                  offset: const Offset(9.0, 0.8),
-                  child: Transform.rotate(
-                    angle: -pi / 2,
-                    child: Column(
-                      children: [
-                        if (feature['properties']['icon'] != null)
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 15,
-                            width: 15,
-                          ),
+            polygonLabels.add(
+              Marker(
+                  point: labelPosition,
+                  builder: (ctx) => GestureDetector(
+                        onTap: () {
+                          // Handle tap on the label
+                          if (feature['properties']['type'] != null) {
+                            _handleLabelTap(roomId, type, labelPosition);
+                          }
+                        },
+                        child: Transform.scale(
+                          scale: 0.08 * mapController.zoom,
+                          child: Transform.translate(
+                            //11goes down and the 3 left and right
+                            offset: const Offset(11.0, 0.8),
+                            child: Transform.rotate(
+                              angle: -pi / 2,
+                              child: Column(
+                                children: [
+                                  if (feature['properties']['icon'] != null)
+                                    Image.network(
+                                      feature['properties']['icon'],
+                                      height: 13,
+                                      width: 13,
+                                    ),
 // we might use this code later
 
-                        // if (feature['properties']['type'] == 'service') ...[
-                        //   FutureBuilder<DocumentSnapshot>(
-                        //     future: FirebaseFirestore.instance
-                        //         .collection('Services')
-                        //         .doc(feature['properties']['roomId'])
-                        //         .get(),
-                        //     builder: (BuildContext context,
-                        //         AsyncSnapshot<DocumentSnapshot> snapshot) {
-                        //       if (snapshot.hasError) {
-                        //         return Text("Error fetching data");
-                        //       }
+                                  // if (feature['properties']['type'] == 'service') ...[
+                                  //   FutureBuilder<DocumentSnapshot>(
+                                  //     future: FirebaseFirestore.instance
+                                  //         .collection('Services')
+                                  //         .doc(feature['properties']['roomId'])
+                                  //         .get(),
+                                  //     builder: (BuildContext context,
+                                  //         AsyncSnapshot<DocumentSnapshot> snapshot) {
+                                  //       if (snapshot.hasError) {
+                                  //         return Text("Error fetching data");
+                                  //       }
 
-                        //       if (snapshot.connectionState ==
-                        //           ConnectionState.done) {
-                        //         Map<String, dynamic>? data = snapshot.data
-                        //             ?.data() as Map<String, dynamic>?;
+                                  //       if (snapshot.connectionState ==
+                                  //           ConnectionState.done) {
+                                  //         Map<String, dynamic>? data = snapshot.data
+                                  //             ?.data() as Map<String, dynamic>?;
 
-                        //         if (data != null) {
-                        //           return Text(
-                        //             data['serviceName'] ?? '',
-                        //             style: const TextStyle(
-                        //               color: Colors.black,
-                        //               fontSize: 8.0,
-                        //             ),
-                        //             maxLines: 2,
-                        //           );
-                        //         } else {
-                        //           return Text("Service not found");
-                        //         }
-                        //       }
+                                  //         if (data != null) {
+                                  //           return Text(
+                                  //             data['serviceName'] ?? '',
+                                  //             style: const TextStyle(
+                                  //               color: Colors.black,
+                                  //               fontSize: 8.0,
+                                  //             ),
+                                  //             maxLines: 2,
+                                  //           );
+                                  //         } else {
+                                  //           return Text("Service not found");
+                                  //         }
+                                  //       }
 
-                        //       return const CircularProgressIndicator(); // While loading
-                        //     },
-                        //   ),
-                        // ] else ...[
+                                  //       return const CircularProgressIndicator(); // While loading
+                                  //     },
+                                  //   ),
+                                  // ] else ...[
 
-                        Text(
-                          feature['properties']['label'] ?? '',
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 8.0,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400),
-                          maxLines: 2,
+                                  Text(
+                                    feature['properties']['label'] ?? '',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 6.0,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w400),
+                                    maxLines: 2,
+                                  ),
+                                  // ],
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        // ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ));
+                      )),
+            );
           });
         }
       }
