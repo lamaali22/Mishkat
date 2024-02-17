@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mishkat/pages/home_page.dart';
 import 'package:mishkat/pages/mapView.dart';
+import 'package:provider/provider.dart';
+import 'package:mishkat/services/authService.dart';
+
 import 'firebase_options.dart';
 
 void main() async {
@@ -20,14 +24,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => (AuthService()),
+        )
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        // home: const MapScreen(title: 'Flutter Map GeoJson Demo'),
+        home: HomePage(),
       ),
-      // home: const MapScreen(title: 'Flutter Map GeoJson Demo'),
-      home: HomePage(),
     );
   }
 }
