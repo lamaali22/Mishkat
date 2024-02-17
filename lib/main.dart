@@ -24,24 +24,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return
-        // MultiProvider(
-        //   providers: [
-        //     ChangeNotifierProvider(
-        //       create: (_) => (AuthService()),
-        //     )
-        //   ],
-        //   child:
-        MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => (AuthService()),
+        )
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        // home: const MapScreen(title: 'Flutter Map GeoJson Demo'),
+        home: HomePage(),
       ),
-      // home: const MapScreen(title: 'Flutter Map GeoJson Demo'),
-      home: HomePage(),
     );
-    //);
   }
 }
 

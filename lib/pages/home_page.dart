@@ -92,38 +92,52 @@ class _HomePage extends State<HomePage> {
                         phoneNumberController.text = value;
                       });
                     },
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Phone number cannot be empty';
+                      }
+                      if (value.length != 9) {
+                        return 'Phone number must have 9 digits';
+                      }
+                      return null; // Return null if the input is valid
+                    },
                     decoration: InputDecoration(
                       hintText: "Enter phone number",
                       enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF09186C),
-                          )),
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF09186C),
+                        ),
+                      ),
                       focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF09186C),
-                          )),
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF09186C),
+                        ),
+                      ),
                       prefixIcon: Container(
                         padding: const EdgeInsets.all(11.0),
                         child: InkWell(
                           onTap: () {
                             showCountryPicker(
-                                context: context,
-                                countryListTheme: const CountryListThemeData(
-                                    bottomSheetHeight: 500),
-                                onSelect: (value) {
-                                  setState(() {
-                                    selectedCountry = value;
-                                  });
+                              context: context,
+                              countryListTheme: const CountryListThemeData(
+                                bottomSheetHeight: 500,
+                              ),
+                              onSelect: (value) {
+                                setState(() {
+                                  selectedCountry = value;
                                 });
+                              },
+                            );
                           },
                           child: Text(
                             "${selectedCountry.flagEmoji} + ${selectedCountry.phoneCode}",
                             style: const TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold),
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -153,8 +167,7 @@ class _HomePage extends State<HomePage> {
                   width: 290, // Set width to 39 pixels
                   height: 50, // Set height to 603 pixels
                   child: ElevatedButton(
-                    onPressed: () => {},
-                    // sendPhoneNumber(),
+                    onPressed: () => sendPhoneNumber(),
                     child: Text('Sign in'),
                     style: ElevatedButton.styleFrom(
                       primary: Color(0xFF09186C),
@@ -199,9 +212,19 @@ class _HomePage extends State<HomePage> {
     );
   }
 
-  // void sendPhoneNumber() {
-  //   final as = Provider.of<AuthService>(context, listen: false);
-  //   String phoneNumber = phoneNumberController.text.trim();
-  //   as.signInWithPhone(context, "+${selectedCountry.phoneCode}$phoneNumber");
-  // }
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void sendPhoneNumber() {
+    final as = Provider.of<AuthService>(context, listen: false);
+    String phoneNumber = phoneNumberController.text.trim();
+    if (phoneNumber.isEmpty)
+      _showSnackbar('Enter your phone number');
+    else if (phoneNumber.length != 9)
+      _showSnackbar('phone number shall be 9-Digits');
+    else
+      as.signInWithPhone(context, "+${selectedCountry.phoneCode}$phoneNumber");
+  }
 }
