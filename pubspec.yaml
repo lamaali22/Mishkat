@@ -75,6 +75,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/map.geojson
+    - assets/logo.png
   
 
 
