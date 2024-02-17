@@ -1,85 +1,49 @@
 import 'dart:collection';
 
+import 'package:country_picker/country_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mishkat/pages/mapView.dart';
 import 'package:mishkat/pages/otpVerification.dart';
-import 'package:mishkat/pages/phoneNumberPage.dart';
+import 'package:mishkat/services/authService.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
+  final TextEditingController phoneConrtoller = TextEditingController();
   @override
   _HomePage createState() => _HomePage();
 }
 
 class _HomePage extends State<HomePage> {
   final TextEditingController phoneNumberController = TextEditingController();
-  Future<void> _verifyPhoneNumber() async {
-    String phoneNumber = phoneNumberController.text.trim();
-
-    if (phoneNumber.isEmpty) {
-      _showSnackbar('Please enter a phone number.');
-      return;
-    }
-
-    if (!RegExp(r'^[0-9]{9}$').hasMatch(phoneNumber)) {
-      _showSnackbar('Please enter a valid 10-digit phone number.');
-      return;
-    }
-
-    phoneNumber = '+966$phoneNumber'; // Adjust the country code as needed
-    print("Phonemun is: $phoneNumber");
-    try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-retrieval or instant verification completed successfully
-          // Sign in the user with the credential
-          await FirebaseAuth.instance.signInWithCredential(credential);
-          _showSnackbar(
-              'User signed in automatically: ${FirebaseAuth.instance.currentUser?.uid}');
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          // Verification failed, handle the error
-          _showSnackbar('Phone number verification failed: $e');
-        },
-        codeSent: (String verificationId, int? resendToken) async {
-          // Code has been sent to the provided phone number
-          // Navigate to OTP verification page
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          // Auto-retrieval timeout, handle the situation
-          _showSnackbar(
-              'Auto-retrieval timeout. Verification ID: $verificationId');
-        },
-        timeout: Duration(seconds: 60), // Set the timeout for verification
-      );
-    } catch (e) {
-      // Handle other errors
-      _showSnackbar('Error during phone number verification: $e');
-    }
-  }
-
-  void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
+  Country selectedCountry = Country(
+      phoneCode: "966",
+      countryCode: "SA",
+      e164Sc: 0,
+      geographic: true,
+      level: 1,
+      name: "Saudi Arabia",
+      example: "Saudi Arabia",
+      displayName: "Saudi Arabia",
+      displayNameNoCountryCode: "KSA",
+      e164Key: "");
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Color(0xFF09186C),
-        title: Text(
-          "Home Page",
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
-        ),
-        toolbarHeight: 90, // Set the desired height here
-        // Additional properties if needed
-      ),
+      // appBar: AppBar(
+      //   automaticallyImplyLeading: false,
+      //   backgroundColor: Color(0xFF09186C),
+      //   title: Text(
+      //     "Home Page",
+      //     style: TextStyle(
+      //       fontWeight: FontWeight.w500,
+      //       color: Colors.white,
+      //     ),
+      //   ),
+      //   toolbarHeight: 90, // Set the desired height here
+      //   // Additional properties if needed
+      // ),
       body: Stack(
         children: [
           Container(
@@ -95,6 +59,11 @@ class _HomePage extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Image.asset(
+                  'assets/logo.png',
+                  height: 230,
+                  width: 230,
+                ),
                 Text(
                   'Welcome to Mishkat',
                   style: TextStyle(
@@ -111,23 +80,83 @@ class _HomePage extends State<HomePage> {
                     color: Color(0xFF09186C), // Adjust color if needed
                   ),
                 ),
-                SizedBox(
-                    height:
-                        20), // Add some space between the texts and the text field
+                SizedBox(height: 20),
                 Container(
-                  width: 300, // Adjust width as needed
-                  child: TextField(
+                  width: 290,
+                  child: // Add some space between the texts and the text field
+                      TextFormField(
+                    controller: phoneNumberController,
                     keyboardType: TextInputType.phone,
+                    onChanged: (value) {
+                      setState(() {
+                        phoneNumberController.text = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Phone number cannot be empty';
+                      }
+                      if (value.length != 9) {
+                        return 'Phone number must have 9 digits';
+                      }
+                      return null; // Return null if the input is valid
+                    },
                     decoration: InputDecoration(
-                      labelText: '+966 5XXXXXXXX',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color.fromARGB(
-                              255, 184, 214, 239), // Border color
+                      hintText: "Enter phone number",
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF09186C),
                         ),
                       ),
-                      filled: true,
-                      fillColor: Color(0xFFF1F4FF),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF09186C),
+                        ),
+                      ),
+                      prefixIcon: Container(
+                        padding: const EdgeInsets.all(11.0),
+                        child: InkWell(
+                          onTap: () {
+                            showCountryPicker(
+                              context: context,
+                              countryListTheme: const CountryListThemeData(
+                                bottomSheetHeight: 500,
+                              ),
+                              onSelect: (value) {
+                                setState(() {
+                                  selectedCountry = value;
+                                });
+                              },
+                            );
+                          },
+                          child: Text(
+                            "${selectedCountry.flagEmoji} + ${selectedCountry.phoneCode}",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      suffixIcon: phoneNumberController.text.length == 9
+                          ? Container(
+                              height: 30,
+                              width: 30,
+                              margin: const EdgeInsets.all(10.0),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.green,
+                              ),
+                              child: const Icon(
+                                Icons.done,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            )
+                          : null,
                     ),
                   ),
                 ),
@@ -138,9 +167,7 @@ class _HomePage extends State<HomePage> {
                   width: 290, // Set width to 39 pixels
                   height: 50, // Set height to 603 pixels
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to OtpVerification page
-                    },
+                    onPressed: () => sendPhoneNumber(),
                     child: Text('Sign in'),
                     style: ElevatedButton.styleFrom(
                       primary: Color(0xFF09186C),
@@ -166,7 +193,8 @@ class _HomePage extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => MapScreen(title: 'Flutter Map GeoJson Demo')),
+                            builder: (context) =>
+                                MapScreen(title: 'Flutter Map GeoJson Demo')),
                       );
                     },
                     child: Text('Continue as guest'),
@@ -182,5 +210,21 @@ class _HomePage extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void sendPhoneNumber() {
+    final as = Provider.of<AuthService>(context, listen: false);
+    String phoneNumber = phoneNumberController.text.trim();
+    if (phoneNumber.isEmpty)
+      _showSnackbar('Enter your phone number');
+    else if (phoneNumber.length != 9)
+      _showSnackbar('phone number shall be 9-Digits');
+    else
+      as.signInWithPhone(context, "+${selectedCountry.phoneCode}$phoneNumber");
   }
 }

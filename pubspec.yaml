@@ -50,6 +50,11 @@ dependencies:
   permission_handler: ^11.0.1
   dart_numerics: ^0.0.6
   dijkstra: ^0.0.4
+  country_picker: ^2.0.23
+  firebase_storage: ^11.6.0
+  shared_preferences: ^2.2.2
+  provider: ^6.1.1
+  pinput: ^3.0.1
 
 dev_dependencies:
   flutter_test:
