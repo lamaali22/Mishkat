@@ -50,6 +50,8 @@ dependencies:
   permission_handler: ^11.0.1
   dart_numerics: ^0.0.6
   dijkstra: ^0.0.4
+  flutter_polyline_points: ^1.0.0
+  collection: ^1.17.0
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key></key>
+	<string></string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -9,6 +11,16 @@
 			<string></string>
 		</dict>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string></string>
+	</array>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string> access Bluetooth peripheral data</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Mishkat needs access to location services for Bluetooth scanning in the background</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>mishkat needs your permission for location access</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>We need Bluetooth access to find your location</string>
 	<key>CFBundleDevelopmentRegion</key>

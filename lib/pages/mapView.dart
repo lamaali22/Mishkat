@@ -12,7 +12,7 @@ import 'package:mishkat/pages/roomInformation.dart';
 import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
 import 'package:mishkat/services/indoorGraph.dart' ;
-import 'package:mishkat/services/pathFindingHelper.dart';
+import 'package:mishkat/services/shortestPath.dart';
 import 'package:mishkat/widgets/Messages.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 import 'package:dijkstra/dijkstra.dart';
@@ -802,6 +802,7 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     BluetoothPermissions().initBluetooth();
     _loadGeoJson();
     periodicStartScanning();
+  
 
 //backup working code
     // Future.delayed(Duration(seconds: 5), () {
@@ -899,7 +900,7 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
               height: 50.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.red.withOpacity(0.28),
+                color: Colors.blue.withOpacity(0.28),
               ),
             ),
             Container(
@@ -922,35 +923,33 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
       // Move the camera to the user's location
       mapController.move(userLocation, 20.0);
       print("userloaction is null");
-    }
+    }print('user location isnt null at 925');
   }
 
    //Helper method to display the shortest path on the map
-  void _displayShortestPath(List<LatLng> shortestPath) {
-    // Clear existing markers or overlays related to paths
-   polygons.clear();
-  print ('shortest path is not empty? ${shortestPath.isNotEmpty}');
-    // Draw the path on the map
-    if (shortestPath.isNotEmpty) {
-      // Create a Polygon to represent the path
-      final pathPolygon = Polygon(
-        points: shortestPath,
-        color: Colors.blue.withOpacity(0.5),
-        borderStrokeWidth: 3.0,
-        borderColor: Colors.blue,
-        isDotted: false,
-      );
+// Modify the _displayShortestPath method
+void _displayShortestPath(List<LatLng> shortestPath) {
+  // Clear existing markers or overlays related to paths
+  //polygons.clear();
+  print('shortest path is not empty? ${shortestPath.isNotEmpty}');
 
-      // Add the pathPolygon to the list of polygons
-      setState(() {
-        polygons.add(pathPolygon);
-      });
+  // Draw the path on the map
+  if (shortestPath.isNotEmpty) {
+    // Get polylines from the ShortestPath class
+    List<Polyline> polylines = ShortestPath.getPolylines(shortestPath);
 
-      // Move the camera to the center of the path with an appropriate zoom level
-      final centerOfPath = calculateCenterOfPath(shortestPath);
-      mapController.move(centerOfPath, 18.0);
-    }
+    // Add the polylines to the list of polygons
+  setState(() {
+    polygons.addAll(polylines.cast<Polygon>());
+  });
+
+
+    // Move the camera to the center of the path with an appropriate zoom level
+    final centerOfPath = calculateCenterOfPath(shortestPath);
+    mapController.move(centerOfPath, 18.0);
   }
+}
+
 
 
   // Helper method to calculate the center of the path
@@ -976,8 +975,8 @@ bool _isPointClear(LatLng point) {
   return point.latitude < 10.0; // Adjust the threshold as needed
 }
 
-void _calculateShortestPath() {
-  print('inside calculateshortest path');
+// Modify the _calculateShortestPath method
+void _calculateShortestPath() async {
   // Ensure there is a user location and a tapped location
   if (userLocationMarker == null || tappedLocation == null) {
     print('userlocation is null ? ${userLocationMarker == null}');
@@ -985,57 +984,15 @@ void _calculateShortestPath() {
     return;
   }
 
-  // Create an IndoorGraph with vertices as LatLng points
-  IndoorGraph graph = IndoorGraph({}, {});
-  print('graph is here ${graph.nodes}');
-print(graph);
- // Add user location and tapped location as nodes
-print('User location marker: ${userLocationMarker!.point}');
-print('Tapped location: $tappedLocation');
-graph.addNode("user", userLocationMarker!.point);
-graph.addNode("tapped", tappedLocation);
-
-  // Add edges between the vertices based on your map data
-// Modify this part based on your actual map data and structure
-for (Polygon polygon in polygons) {
-  for (LatLng point in polygon.points) {
-    // Check if the point is clear (not above the block)
-    //if (_isPointClear(point)) {
-      print('Adding node and connection for point: $point');
-      graph.addNode(point.toString(), point);
-      graph.addConnection("user", point.toString());
-      graph.addConnection("tapped", point.toString());
-   // }
-  }
-}
-
-  print('graph is here3 ${graph.nodes}');
-
-  // Calculate the shortest path using Dijkstra's algorithm
-  DijkstraResult result = dijkstra(graph, "user", "tapped");
- if (result == null) {
-    print('Error: Dijkstra result is null');
-    return;
-  }
-   print('Dijkstra result: $result');
-
-  // Extract the calculated shortest path as LatLng points
-  List<LatLng> calculatedShortestPath = result.previousNodes.keys
-      .where((node) => result.previousNodes[node] != null)
-      .map((node) => graph.nodes[node]!)
-      .toList();
-
- if (calculatedShortestPath.isEmpty) {
-    print('Error: Calculated shortest path is empty');
-    return;
-  }
-    setState(() {
-    shortestPath = calculatedShortestPath;
-  });
-
+  // Calculate the shortest path using the ShortestPath class
+  List<LatLng> calculatedShortestPath =
+      await ShortestPath.calculateShortestPath(
+         location.currentLocation, tappedLocation);
+print('calculatedShortestPath length is ${calculatedShortestPath.first}');
   // Display the shortest path on the map
-  _displayShortestPath(shortestPath);
+  _displayShortestPath(calculatedShortestPath);
 }
+
 
 
 }
