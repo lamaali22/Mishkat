@@ -45,9 +45,10 @@ dependencies:
   google_maps_flutter: ^2.5.3
   geojson_vi: ^2.2.1
   firebase_auth: ^4.16.0
-
-
-  
+  dropdown_search: ^5.0.6
+  share_plus: ^4.0.4
+  uni_links: ^0.5.1
+  uuid: ^3.0.4
 
 dev_dependencies:
   flutter_test:

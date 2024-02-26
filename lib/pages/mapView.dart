@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -7,15 +8,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
+import 'package:share_plus/share_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-  } catch (e) {
-    print('Error initializing Firebase: $e');
-  }
   runApp(const MyApp());
 }
 
@@ -24,17 +20,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Flutter Map Demo',
-      home: MapScreen(title: 'Flutter Map Demo'),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MapScreen(center: LatLng(24.723315121952027, 46.63643191673523)),
     );
   }
 }
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key, required this.title}) : super(key: key);
+  const MapScreen({Key? key, required this.center}) : super(key: key);
 
-  final String title;
+  final LatLng center;
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -44,6 +43,8 @@ class _MapScreenState extends State<MapScreen> {
   MapController mapController;
   List<Polygon> polygons;
   List<Marker> polygonLabels;
+  List<Map<String, dynamic>> places = [];
+  String selectedPlace = '';
 
   _MapScreenState()
       : mapController = MapController(),
@@ -51,45 +52,126 @@ class _MapScreenState extends State<MapScreen> {
         polygonLabels = [];
 
   @override
+  void initState() {
+    super.initState();
+    _loadGeoJson();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: MediaQuery.of(context).size.height *
-                  0.8, // Adjust the height as needed
-              child: GestureDetector(
-                child: FlutterMap(
-                  mapController: mapController,
-                  options: MapOptions(
-                    center: LatLng(24.72337, 46.63664),
-                    minZoom: 14.0,
-                    zoom: 19,
+    return SafeArea(
+        child: Scaffold(
+      appBar: PreferredSize(
+          preferredSize: Size.fromHeight(80.0), // Adjust the height as needed
+          child: AppBar(
+            backgroundColor:
+                Colors.transparent, // Set background color to transparent
+            elevation: 0, // Remove shadow
+            flexibleSpace: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: DropdownSearch<String>(
+                items: places.map<String>((place) => place['label']).toList(),
+
+                dropdownDecoratorProps: DropDownDecoratorProps(
+                  dropdownSearchDecoration: InputDecoration(
+                    labelText: "Search",
+                    hintText: "Search",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25.0),
+                      borderSide: BorderSide(
+                        color: Color.fromARGB(255, 9, 24, 108),
+                      ), // Adjust the radius as needed
+                    ),
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: const ['a', 'b', 'c'],
-                    ),
-                    GestureDetector(
-                      child: PolygonLayer(
-                        polygons: polygons,
-                      ),
-                    ),
-                    MarkerLayer(
-                      markers: polygonLabels,
-                    ),
-                  ],
                 ),
+                popupProps: PopupPropsMultiSelection.modalBottomSheet(
+                  isFilterOnline: true,
+                  showSelectedItems: true,
+                  showSearchBox: true,
+                  searchFieldProps: TextFieldProps(
+                    style: TextStyle(fontSize: 12.0),
+                    decoration: InputDecoration(
+                      focusColor: Color.fromARGB(255, 9, 24, 108),
+                      labelStyle: TextStyle(fontSize: 12.0),
+                      floatingLabelStyle: TextStyle(fontSize: 12.0),
+                      labelText: "Search",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide(
+                          color: Color.fromARGB(255, 9, 24, 108),
+                        ),
+                      ),
+                      fillColor: Color.fromARGB(255, 9, 24, 108),
+                    ),
+                  ),
+                ),
+
+                // mode: Mode.MENU,
+
+                onChanged: (selectedPlace) {
+                  // Find the index of the selected place
+                  int selectedIndex = places
+                      .indexWhere((place) => place['label'] == selectedPlace);
+
+                  // Check if a corresponding place is found
+                  if (selectedIndex != -1) {
+                    // Extract the required values using the index
+                    String roomId = places[selectedIndex]['roomId'];
+                    String type = places[selectedIndex]['type'];
+                    LatLng position = places[selectedIndex]['position'];
+
+                    // Call handleLabelTap method with the required values
+                    _handleLabelTap(roomId, type, position);
+                  }
+                },
               ),
             ),
-          ],
-        ),
+          )),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: MediaQuery.of(context).size.height *
+                        0.8, // Adjust the height as needed
+                    child: FlutterMap(
+                      mapController: mapController,
+                      options: MapOptions(
+                        center: LatLng(24.723315121952027, 46.63643191673523),
+                        minZoom: 14.0,
+                        zoom: 19.3,
+                        rotation: 57 * pi / 2, //new code
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          subdomains: const ['a', 'b', 'c'],
+                        ),
+                        GestureDetector(
+                          child: PolygonLayer(
+                            polygons: polygons,
+                          ),
+                        ),
+                        MarkerLayer(
+                          markers: polygonLabels,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-    );
+    ));
   }
 
   Future<void> _loadGeoJson() async {
@@ -103,7 +185,6 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _convertAndDisplayPolygons(Map<String, dynamic> geoJson) async {
     for (var feature in geoJson['features']) {
       if (feature['geometry']['type'] == 'Polygon') {
-        // ... existing code ...
         List<LatLng> coordinates = [];
 
         for (var point in feature['geometry']['coordinates'][0]) {
@@ -146,99 +227,85 @@ class _MapScreenState extends State<MapScreen> {
           // Get a reference to the Firestore document
           String roomId = feature['properties']['roomId'];
           String type = feature['properties']['type'];
-          // this code might be used later
 
-          // if (type == "classroom" ||
-          //     type == "mariah auditorium" ||
-          //     type == "khadijah auditorium")
-          //   await _updateClassroomCoordinates(roomId, labelPosition);
+          if (type == 'service') {
+            try {
+              // Query Firestore to get serviceName
+              DocumentSnapshot snapshot = await FirebaseFirestore.instance
+                  .collection('Services')
+                  .doc(roomId)
+                  .get();
 
-          // if (type == "lab") await _updateLabCoordinates(roomId, labelPosition);
-          // if (type == "office")
-          //   await _updateOfficeCoordinates(roomId, labelPosition);
-          // if (type != "classroom" &&
-          //     type != "mariah auditorium" &&
-          //     type != "khadijah auditorium" &&
-          //     type != "lab")
-          //   await _updateServiceCoordinates(roomId, labelPosition);
+              // Check if the document exists
+              if (snapshot.exists) {
+                String serviceName = snapshot['serviceName'];
+                // Update the label property based on serviceName
+                feature['properties']['label'] = serviceName;
+              } else {
+                // Handle the case when the document does not exist
+                print('Document does not exist');
+              }
+            } catch (e) {
+              // Handle errors while fetching data
+              print('Error fetching data: $e');
+            }
+          }
+
+          if (feature['properties']['label'] != null &&
+              feature['properties']['label'] != "unavailable") {
+            String label = feature['properties']['label'];
+
+            places.add({
+              'position': labelPosition, // Generate a unique ID for each place
+              'label': label,
+              'type': type,
+              'roomId': roomId,
+            });
+          }
+
           setState(() {
             // Add Marker for label
-            polygonLabels.add(Marker(
-              point: labelPosition,
-              builder: (ctx) => GestureDetector(
-                onTap: () {
-                  // Handle tap on the label
-                  if (feature['properties']['type'] != null) {
-                    _handleLabelTap(roomId, type, labelPosition);
-                  }
-                },
-                child: Transform.translate(
-                  //11goes down and the 3 left and right
-                  offset: const Offset(9.0, 0.8),
-                  child: Transform.rotate(
-                    angle: -pi / 2,
-                    child: Column(
-                      children: [
-                        if (feature['properties']['icon'] != null)
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 15,
-                            width: 15,
+            polygonLabels.add(
+              Marker(
+                  point: labelPosition,
+                  builder: (ctx) => GestureDetector(
+                        onTap: () {
+                          // Handle tap on the label
+                          if (feature['properties']['type'] != null) {
+                            _handleLabelTap(roomId, type, labelPosition);
+                          }
+                        },
+                        child: Transform.scale(
+                          scale: 0.08 * mapController.zoom,
+                          child: Transform.translate(
+                            //11goes down and the 3 left and right
+                            offset: const Offset(10.0, 2),
+                            child: Transform.rotate(
+                              angle: -pi / 2,
+                              child: Column(
+                                children: [
+                                  // if (feature['properties']['icon'] != null)
+                                  //   Image.network(
+                                  //     feature['properties']['icon'],
+                                  //     height: 13,
+                                  //     width: 13,
+                                  //   ),
+                                  Text(
+                                    feature['properties']['label'] ?? '',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 5.0,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w400),
+                                    maxLines: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-// we might use this code later
-
-                        // if (feature['properties']['type'] == 'service') ...[
-                        //   FutureBuilder<DocumentSnapshot>(
-                        //     future: FirebaseFirestore.instance
-                        //         .collection('Services')
-                        //         .doc(feature['properties']['roomId'])
-                        //         .get(),
-                        //     builder: (BuildContext context,
-                        //         AsyncSnapshot<DocumentSnapshot> snapshot) {
-                        //       if (snapshot.hasError) {
-                        //         return Text("Error fetching data");
-                        //       }
-
-                        //       if (snapshot.connectionState ==
-                        //           ConnectionState.done) {
-                        //         Map<String, dynamic>? data = snapshot.data
-                        //             ?.data() as Map<String, dynamic>?;
-
-                        //         if (data != null) {
-                        //           return Text(
-                        //             data['serviceName'] ?? '',
-                        //             style: const TextStyle(
-                        //               color: Colors.black,
-                        //               fontSize: 8.0,
-                        //             ),
-                        //             maxLines: 2,
-                        //           );
-                        //         } else {
-                        //           return Text("Service not found");
-                        //         }
-                        //       }
-
-                        //       return const CircularProgressIndicator(); // While loading
-                        //     },
-                        //   ),
-                        // ] else ...[
-
-                        Text(
-                          feature['properties']['label'] ?? '',
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 8.0,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400),
-                          maxLines: 2,
                         ),
-                        // ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ));
+                      )),
+            );
           });
         }
       }
@@ -251,7 +318,7 @@ class _MapScreenState extends State<MapScreen> {
     String serviceType = '';
     String openTime = "";
     String closeTime = "";
-    bool isAvailable = await _isRoomAvailable(roomId);
+    bool isAvailable = await _isRoomAvailable(roomId, type);
 
     if (type == 'service') {
       try {
@@ -310,7 +377,7 @@ class _MapScreenState extends State<MapScreen> {
                       if (type == "lab" || type == "classroom") ...[
                         SizedBox(
                             width:
-                                175), // Adjust the spacing between roomId and availability status
+                                190), // Adjust the spacing between roomId and availability status
                         Row(
                           children: [
                             Icon(
@@ -388,9 +455,18 @@ class _MapScreenState extends State<MapScreen> {
                   child: Row(
                     children: [
                       _buildButton("Directions", Icons.directions_outlined),
-                      _buildButton("Save", Icons.bookmark_outline_outlined),
+                      _buildButton("Save", Icons.bookmark_outline_outlined,
+                          onTap: () {}),
                       _buildButton("Favorite", Icons.star_border_outlined),
-                      _buildButton("Share", Icons.ios_share),
+                      _buildButton(
+                        "Share",
+                        Icons.ios_share,
+                        onTap: () {
+                          print("pressed");
+                          Share.share(
+                              'look at this place https://www.google.com/maps/@${position.latitude},${position.longitude},15z ');
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -443,7 +519,9 @@ class _MapScreenState extends State<MapScreen> {
     mapController.move(position, 21.0);
   }
 
-  Future<bool> _isRoomAvailable(String roomId) async {
+//String url ='https://example.com/map?lat=${position.latitude}&lng=${position.longitude}&zoom=19';
+
+  Future<bool> _isRoomAvailable(String roomId, String type) async {
     DateTime now = DateTime.now();
     print("now: $now");
 
@@ -454,31 +532,39 @@ class _MapScreenState extends State<MapScreen> {
     // Adjust the day of the week to match Firestore's indexing (Firestore starts the week on Sunday)
     int firestoreDayOfWeek = now.weekday;
     print("Firestore day of week: $firestoreDayOfWeek");
+    String roomType = "";
+    if (type != "classroom" &&
+        type != "mariah auditorium" &&
+        type != "khadijah auditorium" &&
+        type != 'lab') return false;
 
+    if (type == "classroom" ||
+        type == "mariah auditorium" ||
+        type == "khadijah auditorium") roomType = "Classroom";
+
+    if (type == "lab") roomType = "Lab";
     // Get the Firestore document for the classroom
-    DocumentSnapshot classroomSnapshot = await FirebaseFirestore.instance
-        .collection('Classroom')
-        .doc(roomId)
-        .get();
+    DocumentSnapshot roomSnapshot =
+        await FirebaseFirestore.instance.collection(roomType).doc(roomId).get();
 
-    if (classroomSnapshot.exists) {
+    if (roomSnapshot.exists) {
       // Select the corresponding timeslots array based on the current day
       List<dynamic> timeslots = [];
       switch (firestoreDayOfWeek) {
         case 0: // Sunday
-          timeslots = classroomSnapshot['sundayTimeslots'];
+          timeslots = roomSnapshot['sundayTimeslots'];
           break;
         case 1: // Monday
-          timeslots = classroomSnapshot['mondayTimeslots'];
+          timeslots = roomSnapshot['mondayTimeslots'];
           break;
         case 2: // Tuesday
-          timeslots = classroomSnapshot['tuesdayTimeslots'];
+          timeslots = roomSnapshot['tuesdayTimeslots'];
           break;
         case 3: // Wednesday
-          timeslots = classroomSnapshot['wednesdayTimeslots'];
+          timeslots = roomSnapshot['wednesdayTimeslots'];
           break;
         case 4: // Thursday
-          timeslots = classroomSnapshot['thursdayTimeslots'];
+          timeslots = roomSnapshot['thursdayTimeslots'];
           break;
 
         default:
@@ -684,7 +770,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildButton(String label, IconData icon) {
+  Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     Color buttonColor;
     Color textColor;
     Color iconColor;
@@ -703,9 +789,7 @@ class _MapScreenState extends State<MapScreen> {
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          onTap: () {
-            // Handle button press
-          },
+          onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 9.0),
             decoration: BoxDecoration(
@@ -742,9 +826,9 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadGeoJson();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _loadGeoJson();
+  // }
 }

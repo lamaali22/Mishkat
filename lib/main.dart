@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mishkat/pages/mapView.dart';
 import 'firebase_options.dart';
 
@@ -15,7 +16,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +26,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MapScreen(title: 'Flutter Map GeoJson Demo'),
+      home: MapScreen(center: LatLng(24.723315121952027, 46.63643191673523)),
     );
   }
 }
+
 
 // void main() async {
 //   runApp(
