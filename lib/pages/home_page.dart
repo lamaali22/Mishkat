@@ -4,18 +4,21 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Home Page')),
-      body: Center(
-        child: Text('Welcome to the Home Page!'),
+      appBar: AppBar(
+        title: const Text("Home Page"),
+      ),
+      body: const Center(
+        child: Text("Welcome to Home Page!"),
       ),
     );
   }
-}*/
-
-/*import 'dart:collection';
+}
+*/
+import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:mishkat/pages/OtpVerfication.dart';
+import 'package:mishkat/pages/log_in_page.dart';
 import 'package:mishkat/pages/phonNumberPage.dart'; 
 
 class HomePage extends StatelessWidget {
@@ -93,7 +96,7 @@ class HomePage extends StatelessWidget {
                       // Navigate to OtpVerification page
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => PhoneNumberPage()),
+                        MaterialPageRoute(builder: (context) => LogInPage()),
                       );
                     },
                     child: Text('Sign in'),
@@ -138,4 +141,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-*/
