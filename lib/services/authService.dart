@@ -1,12 +1,12 @@
-import 'dart:convert';
-// import 'dart:js_util';
+//import 'dart:convert';
+//import 'dart:js_util';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+//import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:mishkat/models/member.dart';
 import 'package:mishkat/pages/otpVerification.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isSignedIn = false;
