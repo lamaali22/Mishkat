@@ -11,6 +11,8 @@ class ShortestPath {
   static Future<List<LatLng>> calculateShortestPath(
     LatLng userLocation,
     LatLng tappedLocation,
+   // List<Map<String, dynamic>> paths,
+
     
   ) async {
     String startRoomId = '6G47';
@@ -21,7 +23,7 @@ print('start room is $startRoomId');
 print('end room is $endRoomId');
 
     Map<String, double> distances = roomGraph.dijkstra(startRoomId);
-
+    print('inside shortest');
     List<LatLng> shortestPath = [];
     String currentRoomId = endRoomId;
 
@@ -34,7 +36,7 @@ print('end room is $endRoomId');
 
     shortestPath.add(userLocation);
     shortestPath = shortestPath.reversed.toList(); // Reverse the path
-print('shortest path is ${ShortestPath.roomGraph.nodes}');
+print('shortest path is ${shortestPath.length}');
     return shortestPath;
   }
 
@@ -119,4 +121,6 @@ print('distance is $distance');
 
     return polylines;
   }
+
+  
 }

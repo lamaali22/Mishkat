@@ -11,11 +11,8 @@ import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
 import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
-import 'package:mishkat/services/indoorGraph.dart' ;
-import 'package:mishkat/services/shortestPath.dart';
 import 'package:mishkat/widgets/Messages.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
-import 'package:dijkstra/dijkstra.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -429,7 +426,7 @@ late LatLng tappedLocation;
    // polygons.clear();  // Clear any existing paths
   });
   // Trigger shortest path calculation
-  _calculateShortestPath();
+  // _calculateShortestPath();
 }),
 
 
@@ -926,72 +923,65 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     }print('user location isnt null at 925');
   }
 
-   //Helper method to display the shortest path on the map
-// Modify the _displayShortestPath method
-void _displayShortestPath(List<LatLng> shortestPath) {
-  // Clear existing markers or overlays related to paths
-  //polygons.clear();
-  print('shortest path is not empty? ${shortestPath.isNotEmpty}');
+   
+   
+   
+// // Modify the _displayShortestPath method
+//   void _displayShortestPath(List<LatLng> shortestPath) {
+//   // Clear existing markers or overlays related to paths
+//   //polygons.clear();
+//   print('shortest path is not empty? ${shortestPath.isNotEmpty}');
 
-  // Draw the path on the map
-  if (shortestPath.isNotEmpty) {
-    // Get polylines from the ShortestPath class
-    List<Polyline> polylines = ShortestPath.getPolylines(shortestPath);
+//   // Draw the path on the map
+//   if (shortestPath.isNotEmpty) {
+//     // Get polylines from the ShortestPath class
+//     List<Polyline> polylines = ShortestPath.getPolylines(shortestPath);
 
-    // Add the polylines to the list of polygons
-  setState(() {
-    polygons.addAll(polylines.cast<Polygon>());
-  });
-
-
-    // Move the camera to the center of the path with an appropriate zoom level
-    final centerOfPath = calculateCenterOfPath(shortestPath);
-    mapController.move(centerOfPath, 18.0);
-  }
-}
+//     // Add the polylines to the list of polygons
+//   setState(() {
+//     polygons.addAll(polylines.cast<Polygon>());
+//   });
 
 
+//     // Move the camera to the center of the path with an appropriate zoom level
+//     final centerOfPath = calculateCenterOfPath(shortestPath);
+//     mapController.move(centerOfPath, 18.0);
+//   }
+// }
 
-  // Helper method to calculate the center of the path
-  LatLng calculateCenterOfPath(List<LatLng> path) {
-    double sumLat = 0.0;
-    double sumLng = 0.0;
+//   // Helper method to calculate the center of the path
+//   LatLng calculateCenterOfPath(List<LatLng> path) {
+//     double sumLat = 0.0;
+//     double sumLng = 0.0;
 
-    for (final point in path) {
-      sumLat += point.latitude;
-      sumLng += point.longitude;
-    }
+//     for (final point in path) {
+//       sumLat += point.latitude;
+//       sumLng += point.longitude;
+//     }
 
-    final avgLat = sumLat / path.length;
-    final avgLng = sumLng / path.length;
+//     final avgLat = sumLat / path.length;
+//     final avgLng = sumLng / path.length;
 
-    return LatLng(avgLat, avgLng);
-  }
+//     return LatLng(avgLat, avgLng);
+//   }
 
-// Helper method to check if a point is clear (not above the block)
-bool _isPointClear(LatLng point) {
-  // Example condition: Check if the latitude is below a certain threshold
-  // You should replace this condition with your actual logic
-  return point.latitude < 10.0; // Adjust the threshold as needed
-}
+// // Modify the _calculateShortestPath method
+//   void _calculateShortestPath() async {
+//   // Ensure there is a user location and a tapped location
+//   if (userLocationMarker == null || tappedLocation == null) {
+//     print('userlocation is null ? ${userLocationMarker == null}');
+//     print('tappedlocation is null ? ${tappedLocation == null}');
+//     return;
+//   }
 
-// Modify the _calculateShortestPath method
-void _calculateShortestPath() async {
-  // Ensure there is a user location and a tapped location
-  if (userLocationMarker == null || tappedLocation == null) {
-    print('userlocation is null ? ${userLocationMarker == null}');
-    print('tappedlocation is null ? ${tappedLocation == null}');
-    return;
-  }
-
-  // Calculate the shortest path using the ShortestPath class
-  List<LatLng> calculatedShortestPath =
-      await ShortestPath.calculateShortestPath(
-         location.currentLocation, tappedLocation);
-print('calculatedShortestPath length is ${calculatedShortestPath.first}');
-  // Display the shortest path on the map
-  _displayShortestPath(calculatedShortestPath);
-}
+//   // Calculate the shortest path using the ShortestPath class
+//   List<LatLng> calculatedShortestPath =
+//       await ShortestPath.calculateShortestPath(
+//          location.currentLocation, tappedLocation);
+// print('calculatedShortestPath length is ${calculatedShortestPath.first}');
+//   // Display the shortest path on the map
+//   _displayShortestPath(calculatedShortestPath);
+// }
 
 
 

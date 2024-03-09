@@ -16,8 +16,6 @@
 		659D10282B7E467A00928CF0 /* ZIPFoundation.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 659D10242B7E467A00928CF0 /* ZIPFoundation.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		659D10292B7E467A00928CF0 /* iOSDFULibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659D10252B7E467A00928CF0 /* iOSDFULibrary.framework */; platformFilter = ios; };
 		659D102A2B7E467A00928CF0 /* iOSDFULibrary.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 659D10252B7E467A00928CF0 /* iOSDFULibrary.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		659D102B2B7E467A00928CF0 /* MTBeaconPlus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659D10262B7E467A00928CF0 /* MTBeaconPlus.framework */; platformFilter = ios; };
-		659D102C2B7E467A00928CF0 /* MTBeaconPlus.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 659D10262B7E467A00928CF0 /* MTBeaconPlus.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		659D102E2B7E46A200928CF0 /* iOSDFULibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659D10252B7E467A00928CF0 /* iOSDFULibrary.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -42,7 +40,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				659D102C2B7E467A00928CF0 /* MTBeaconPlus.framework in Embed Frameworks */,
 				659D102A2B7E467A00928CF0 /* iOSDFULibrary.framework in Embed Frameworks */,
 				659D10282B7E467A00928CF0 /* ZIPFoundation.framework in Embed Frameworks */,
 			);
@@ -72,7 +69,6 @@
 		3E4C8CAD7B578720021D2F73 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		659D10242B7E467A00928CF0 /* ZIPFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ZIPFoundation.framework; path = "Runner/ios beacons /ZIPFoundation.framework"; sourceTree = "<group>"; };
 		659D10252B7E467A00928CF0 /* iOSDFULibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iOSDFULibrary.framework; path = "Runner/ios beacons /iOSDFULibrary.framework"; sourceTree = "<group>"; };
-		659D10262B7E467A00928CF0 /* MTBeaconPlus.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MTBeaconPlus.framework; path = "Runner/ios beacons /MTBeaconPlus.framework"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -98,7 +94,6 @@
 				659D10292B7E467A00928CF0 /* iOSDFULibrary.framework in Frameworks */,
 				4F83C505F11D1FA41C887903 /* Pods_RunnerTests.framework in Frameworks */,
 				659D10272B7E467A00928CF0 /* ZIPFoundation.framework in Frameworks */,
-				659D102B2B7E467A00928CF0 /* MTBeaconPlus.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,7 +181,6 @@
 			isa = PBXGroup;
 			children = (
 				659D10252B7E467A00928CF0 /* iOSDFULibrary.framework */,
-				659D10262B7E467A00928CF0 /* MTBeaconPlus.framework */,
 				659D10242B7E467A00928CF0 /* ZIPFoundation.framework */,
 				7D32D72B158578243CB501F1 /* Pods_Runner.framework */,
 				9B26472763A7B320277E5939 /* Pods_RunnerTests.framework */,
