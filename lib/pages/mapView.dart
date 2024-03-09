@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,6 +14,7 @@ import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
 import 'package:mishkat/widgets/Messages.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
+import 'package:mishkat/widgets/saveLocation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,17 +32,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Flutter Map Demo',
-      home: MapScreen(title: 'Flutter Map Demo'),
+      home: MapScreen(center: LatLng(24.723315121952027, 46.63643191673523)),
     );
   }
 }
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key, required this.title}) : super(key: key);
+  const MapScreen({Key? key, required this.center}) : super(key: key);
 
-  final String title;
+  final LatLng center;
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -53,7 +55,8 @@ class _MapScreenState extends State<MapScreen> {
   LatLng userLocation = LatLng(24.7231, 46.63682222);
   Location location = Location();
   List<LatLng> shortestPath = [];
-
+  List<Map<String, dynamic>> places = [];
+  String selectedPlace = '';
 
   _MapScreenState()
       : mapController = MapController(),
@@ -62,62 +65,128 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
+    return SafeArea(
+        child: Scaffold(
+      appBar: PreferredSize(
+          preferredSize: Size.fromHeight(80.0), // Adjust the height as needed
+          child: AppBar(
+            backgroundColor:
+                Colors.transparent, // Set background color to transparent
+            elevation: 0, // Remove shadow
+            flexibleSpace: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: DropdownSearch<String>(
+                items: places.map<String>((place) => place['label']).toList(),
 
-        backgroundColor: Color(0xFF09186C),
-        title: Center(
-          child: Text(
-            "Map",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-        ),
-
-        toolbarHeight: 90, // Set the desired height here
-        // Additional properties if needed
-      ),
-      bottomNavigationBar: CustomNavigationBar(index: 1),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: MediaQuery.of(context).size.height *
-                  0.8, // Adjust the height as needed
-              child: GestureDetector(
-                child: FlutterMap(
-                  mapController: mapController,
-                  options: MapOptions(
-                    center: LatLng(24.72337, 46.63664),
-                    minZoom: 14.0,
-                    zoom: 19,
+                dropdownDecoratorProps: DropDownDecoratorProps(
+                  dropdownSearchDecoration: InputDecoration(
+                    labelText: "Search",
+                    filled: false,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25.0),
+                      borderSide: BorderSide(
+                        color: Color.fromARGB(255, 9, 24, 108),
+                      ), // Adjust the radius as needed
+                    ),
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: const ['a', 'b', 'c'],
-                    ),
-                    GestureDetector(
-                      child: PolygonLayer(
-                        polygons: polygons,
-                      ),
-                    ),
-                    MarkerLayer(
-                      markers: polygonLabels,
-                    ),
-                  ],
                 ),
+                popupProps: PopupProps.menu(
+                  isFilterOnline: true,
+                  showSelectedItems: true,
+                  showSearchBox: true,
+                  searchFieldProps: TextFieldProps(
+                    style: TextStyle(
+                      fontSize: 12.0,
+                    ),
+                    decoration: InputDecoration(
+                      focusColor: Color.fromARGB(255, 9, 24, 108),
+                      labelStyle: TextStyle(
+                        fontSize: 12.0,
+                      ),
+                      floatingLabelStyle: TextStyle(
+                        fontSize: 12.0,
+                        color: Color.fromARGB(255, 9, 24, 108),
+                      ),
+                      labelText: "Search",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide(
+                          color: Color.fromARGB(255, 9, 24, 108),
+                        ),
+                      ),
+                      fillColor: Color.fromARGB(255, 9, 24, 108),
+                    ),
+                  ),
+                ),
+
+                // mode: Mode.MENU,
+
+                onChanged: (selectedPlace) {
+                  // Find the index of the selected place
+                  int selectedIndex = places
+                      .indexWhere((place) => place['label'] == selectedPlace);
+
+                  // Check if a corresponding place is found
+                  if (selectedIndex != -1) {
+                    // Extract the required values using the index
+                    String roomId = places[selectedIndex]['roomId'];
+                    String type = places[selectedIndex]['type'];
+                    LatLng position = places[selectedIndex]['position'];
+                    String label = places[selectedIndex]['label'];
+                    // Call handleLabelTap method with the required values
+                    _handleLabelTap(roomId, type, position, label);
+                  }
+                },
               ),
             ),
-          ],
-        ),
+            toolbarHeight: 90, // Set the desired height here
+            // Additional properties if needed
+          )),
+      bottomNavigationBar: CustomNavigationBar(index: 1),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: MediaQuery.of(context).size.height *
+                        0.8, // Adjust the height as needed
+                    child: FlutterMap(
+                      mapController: mapController,
+                      options: MapOptions(
+                        center: LatLng(24.723315121952027, 46.63643191673523),
+                        minZoom: 14.0,
+                        zoom: 19.3,
+                        rotation: 57 * pi / 2, //new code
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          subdomains: const ['a', 'b', 'c'],
+                        ),
+                        GestureDetector(
+                          child: PolygonLayer(
+                            polygons: polygons,
+                          ),
+                        ),
+                        MarkerLayer(
+                          markers: polygonLabels,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-    );
+    ));
   }
 
   Future<void> _loadGeoJson() async {
@@ -128,10 +197,11 @@ class _MapScreenState extends State<MapScreen> {
     _convertAndDisplayPolygons(geoJson);
   }
 
+  String label1 = "";
+
   Future<void> _convertAndDisplayPolygons(Map<String, dynamic> geoJson) async {
     for (var feature in geoJson['features']) {
       if (feature['geometry']['type'] == 'Polygon') {
-        // ... existing code ...
         List<LatLng> coordinates = [];
 
         for (var point in feature['geometry']['coordinates'][0]) {
@@ -189,100 +259,106 @@ class _MapScreenState extends State<MapScreen> {
           //     type != "khadijah auditorium" &&
           //     type != "lab")
           //   await _updateServiceCoordinates(roomId, labelPosition);
+
+          if (type == 'service') {
+            try {
+              // Query Firestore to get serviceName
+              DocumentSnapshot snapshot = await FirebaseFirestore.instance
+                  .collection('Services')
+                  .doc(roomId)
+                  .get();
+
+              // Check if the document exists
+              if (snapshot.exists) {
+                String serviceName = snapshot['serviceName'];
+                // Update the label property based on serviceName
+                feature['properties']['label'] = serviceName;
+              } else {
+                // Handle the case when the document does not exist
+                print('Document does not exist');
+              }
+            } catch (e) {
+              // Handle errors while fetching data
+              print('Error fetching data: $e');
+            }
+          }
+
+          if (feature['properties']['label'] != null &&
+              feature['properties']['label'] != "unavailable") {
+            String label = feature['properties']['label'];
+
+            places.add({
+              'position': labelPosition,
+              'label': label,
+              'type': type,
+              'roomId': roomId,
+            });
+          }
+
           setState(() {
             // Add Marker for label
-            polygonLabels.add(Marker(
-              point: labelPosition,
-              builder: (ctx) => GestureDetector(
-                onTap: () {
-                  // Handle tap on the label
-                  if (feature['properties']['type'] != null) {
-                    _handleLabelTap(roomId, type, labelPosition);
-                  }
-                },
-                child: Transform.translate(
-                  //11goes down and the 3 left and right
-                  offset: const Offset(9.0, 0.8),
-                  child: Transform.rotate(
-                    angle: -pi / 2,
-                    child: Column(
-                      children: [
-                        if (feature['properties']['icon'] != null)
-                          Image.network(
-                            feature['properties']['icon'],
-                            height: 15,
-                            width: 15,
+            polygonLabels.add(
+              Marker(
+                  point: labelPosition,
+                  builder: (ctx) => GestureDetector(
+                        onTap: () {
+                          // Handle tap on the label
+                          if (feature['properties']['type'] != null) {
+                            if (feature['properties']['label'] != null)
+                              label1 = feature['properties']['label'];
+                            else
+                              label1 = feature['properties']['roomId'];
+                            _handleLabelTap(
+                                roomId, type, labelPosition, label1);
+                          }
+                        },
+                        child: Transform.scale(
+                          scale: 0.08 * mapController.zoom,
+                          child: Transform.translate(
+                            //11goes down and the 3 left and right
+                            offset: const Offset(10.0, 2),
+                            child: Transform.rotate(
+                              angle: -pi / 2,
+                              child: Column(
+                                children: [
+                                  if (feature['properties']['icon'] != null)
+                                    Image.network(
+                                      feature['properties']['icon'],
+                                      height: 13,
+                                      width: 13,
+                                    ),
+                                  Text(
+                                    feature['properties']['label'] ?? '',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 5.0,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w400),
+                                    maxLines: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-// we might use this code later
-
-                        // if (feature['properties']['type'] == 'service') ...[
-                        //   FutureBuilder<DocumentSnapshot>(
-                        //     future: FirebaseFirestore.instance
-                        //         .collection('Services')
-                        //         .doc(feature['properties']['roomId'])
-                        //         .get(),
-                        //     builder: (BuildContext context,
-                        //         AsyncSnapshot<DocumentSnapshot> snapshot) {
-                        //       if (snapshot.hasError) {
-                        //         return Text("Error fetching data");
-                        //       }
-
-                        //       if (snapshot.connectionState ==
-                        //           ConnectionState.done) {
-                        //         Map<String, dynamic>? data = snapshot.data
-                        //             ?.data() as Map<String, dynamic>?;
-
-                        //         if (data != null) {
-                        //           return Text(
-                        //             data['serviceName'] ?? '',
-                        //             style: const TextStyle(
-                        //               color: Colors.black,
-                        //               fontSize: 8.0,
-                        //             ),
-                        //             maxLines: 2,
-                        //           );
-                        //         } else {
-                        //           return Text("Service not found");
-                        //         }
-                        //       }
-
-                        //       return const CircularProgressIndicator(); // While loading
-                        //     },
-                        //   ),
-                        // ] else ...[
-
-                        Text(
-                          feature['properties']['label'] ?? '',
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 8.0,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400),
-                          maxLines: 2,
                         ),
-                        // ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ));
+                      )),
+            );
           });
         }
       }
     }
   }
-late LatLng tappedLocation;
+
+  late LatLng tappedLocation;
 
   Future<void> _handleLabelTap(
-      String roomId, String type, LatLng position) async {
+      String roomId, String type, LatLng position, String label) async {
     String serviceName = '';
     String serviceType = '';
     String openTime = "";
     String closeTime = "";
     bool isAvailable = await _isRoomAvailable(roomId, type);
     tappedLocation = position;
-
 
     if (type == 'service') {
       try {
@@ -307,7 +383,7 @@ late LatLng tappedLocation;
         print('Error fetching data: $e');
       }
       // Trigger shortest path calculation
-     // _calculateShortestPath();
+      // _calculateShortestPath();
     }
 
     // Show a dialog at the bottom of the screen
@@ -420,17 +496,28 @@ late LatLng tappedLocation;
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                       _buildButton("Directions", Icons.directions_outlined, onTap: () {
-  setState(() {
-    shortestPath = [];
-   // polygons.clear();  // Clear any existing paths
-  });
-  // Trigger shortest path calculation
-  // _calculateShortestPath();
-}),
-
-
-                      _buildButton("Save", Icons.bookmark_outline_outlined),
+                      _buildButton("Directions", Icons.directions_outlined,
+                          onTap: () {
+                        setState(() {
+                          shortestPath = [];
+                          // polygons.clear();  // Clear any existing paths
+                        });
+                        // Trigger shortest path calculation
+                        // _calculateShortestPath();
+                      }),
+                      _buildButton("Save", Icons.bookmark_outline_outlined,
+                          onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SaveLocationDialog(
+                              roomId: roomId,
+                              position: position,
+                              label: label1,
+                            );
+                          },
+                        );
+                      }),
                       _buildButton("Favorite", Icons.star_border_outlined),
                       _buildButton("Share", Icons.ios_share),
                     ],
@@ -451,6 +538,7 @@ late LatLng tappedLocation;
                         color: Color.fromARGB(255, 9, 24, 108),
                         decoration: TextDecoration.underline,
                         decorationColor: Color.fromARGB(255, 9, 24, 108),
+                        decorationThickness: 1.5,
                         fontSize: 12,
                         fontFamily: 'Poppins',
                       ),
@@ -468,6 +556,7 @@ late LatLng tappedLocation;
                       style: TextStyle(
                         color: Color.fromARGB(255, 9, 24, 108),
                         decoration: TextDecoration.underline,
+                        decorationThickness: 1.5,
                         decorationColor: Color.fromARGB(255, 9, 24, 108),
                         fontSize: 12,
                         fontFamily: 'Poppins',
@@ -485,7 +574,7 @@ late LatLng tappedLocation;
     mapController.move(position, 21.0);
   }
 
- Future<bool> _isRoomAvailable(String roomId, String type) async {
+  Future<bool> _isRoomAvailable(String roomId, String type) async {
     DateTime now = DateTime.now();
     print("now: $now");
 
@@ -734,52 +823,51 @@ late LatLng tappedLocation;
     );
   }
 
-Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
-  Color buttonColor;
-  Color textColor;
-  Color iconColor;
+  Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
+    Color buttonColor;
+    Color textColor;
+    Color iconColor;
 
-  if (label == "Directions") {
-    buttonColor = const Color.fromARGB(255, 9, 24, 108);
-    textColor = Colors.white;
-    iconColor = Colors.white;
-  } else {
-    buttonColor = const Color.fromARGB(255, 229, 237, 255);
-    textColor = const Color.fromARGB(255, 9, 24, 108);
-    iconColor = const Color.fromARGB(255, 9, 24, 108);
-  }
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-    child: Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap, // Use the provided onTap callback
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 9.0),
-          decoration: BoxDecoration(
-            color: buttonColor,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: textColor,
-                  fontFamily: 'Poppins',
-                ), // Adjust label color
-              ),
-              const SizedBox(width: 7.0),
-              Icon(icon, color: iconColor), // Adjust icon color
-            ],
+    if (label == "Directions") {
+      buttonColor = const Color.fromARGB(255, 9, 24, 108);
+      textColor = Colors.white;
+      iconColor = Colors.white;
+    } else {
+      buttonColor = const Color.fromARGB(255, 229, 237, 255);
+      textColor = const Color.fromARGB(255, 9, 24, 108);
+      iconColor = const Color.fromARGB(255, 9, 24, 108);
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap, // Use the provided onTap callback
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 9.0),
+            decoration: BoxDecoration(
+              color: buttonColor,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: textColor,
+                    fontFamily: 'Poppins',
+                  ), // Adjust label color
+                ),
+                const SizedBox(width: 7.0),
+                Icon(icon, color: iconColor), // Adjust icon color
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Color _parseColor(String colorString) {
     // Check if the color string is in the valid format
@@ -799,7 +887,6 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     BluetoothPermissions().initBluetooth();
     _loadGeoJson();
     periodicStartScanning();
-  
 
 //backup working code
     // Future.delayed(Duration(seconds: 5), () {
@@ -920,12 +1007,10 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
       // Move the camera to the user's location
       mapController.move(userLocation, 20.0);
       print("userloaction is null");
-    }print('user location isnt null at 925');
+    }
+    print('user location isnt null at 925');
   }
 
-   
-   
-   
 // // Modify the _displayShortestPath method
 //   void _displayShortestPath(List<LatLng> shortestPath) {
 //   // Clear existing markers or overlays related to paths
@@ -941,7 +1026,6 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
 //   setState(() {
 //     polygons.addAll(polylines.cast<Polygon>());
 //   });
-
 
 //     // Move the camera to the center of the path with an appropriate zoom level
 //     final centerOfPath = calculateCenterOfPath(shortestPath);
@@ -982,7 +1066,4 @@ Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
 //   // Display the shortest path on the map
 //   _displayShortestPath(calculatedShortestPath);
 // }
-
-
-
 }
