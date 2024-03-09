@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
+import 'package:mishkat/widgets/saveLocation.dart';
 import 'package:share_plus/share_plus.dart';
 
 void main() async {
@@ -23,8 +22,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Map Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+          //primarySwatch: Colors.blueGrey,
+          ),
       home: MapScreen(center: LatLng(24.723315121952027, 46.63643191673523)),
     );
   }
@@ -40,6 +39,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   MapController mapController;
   List<Polygon> polygons;
   List<Marker> polygonLabels;
@@ -61,6 +61,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
+      key: _scaffoldKey,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(80.0), // Adjust the height as needed
           child: AppBar(
@@ -76,8 +77,7 @@ class _MapScreenState extends State<MapScreen> {
                 dropdownDecoratorProps: DropDownDecoratorProps(
                   dropdownSearchDecoration: InputDecoration(
                     labelText: "Search",
-                    hintText: "Search",
-                    filled: true,
+                    filled: false,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(25.0),
@@ -87,16 +87,23 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                 ),
-                popupProps: PopupPropsMultiSelection.modalBottomSheet(
+                popupProps: PopupProps.menu(
                   isFilterOnline: true,
                   showSelectedItems: true,
                   showSearchBox: true,
                   searchFieldProps: TextFieldProps(
-                    style: TextStyle(fontSize: 12.0),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                    ),
                     decoration: InputDecoration(
                       focusColor: Color.fromARGB(255, 9, 24, 108),
-                      labelStyle: TextStyle(fontSize: 12.0),
-                      floatingLabelStyle: TextStyle(fontSize: 12.0),
+                      labelStyle: TextStyle(
+                        fontSize: 12.0,
+                      ),
+                      floatingLabelStyle: TextStyle(
+                        fontSize: 12.0,
+                        color: Color.fromARGB(255, 9, 24, 108),
+                      ),
                       labelText: "Search",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25.0),
@@ -122,9 +129,9 @@ class _MapScreenState extends State<MapScreen> {
                     String roomId = places[selectedIndex]['roomId'];
                     String type = places[selectedIndex]['type'];
                     LatLng position = places[selectedIndex]['position'];
-
+                    String label = places[selectedIndex]['label'];
                     // Call handleLabelTap method with the required values
-                    _handleLabelTap(roomId, type, position);
+                    _handleLabelTap(roomId, type, position, label);
                   }
                 },
               ),
@@ -182,6 +189,7 @@ class _MapScreenState extends State<MapScreen> {
     _convertAndDisplayPolygons(geoJson);
   }
 
+  String label1 = "";
   Future<void> _convertAndDisplayPolygons(Map<String, dynamic> geoJson) async {
     for (var feature in geoJson['features']) {
       if (feature['geometry']['type'] == 'Polygon') {
@@ -272,7 +280,12 @@ class _MapScreenState extends State<MapScreen> {
                         onTap: () {
                           // Handle tap on the label
                           if (feature['properties']['type'] != null) {
-                            _handleLabelTap(roomId, type, labelPosition);
+                            if (feature['properties']['label'] != null)
+                              label1 = feature['properties']['label'];
+                            else
+                              label1 = feature['properties']['roomId'];
+                            _handleLabelTap(
+                                roomId, type, labelPosition, label1);
                           }
                         },
                         child: Transform.scale(
@@ -284,12 +297,12 @@ class _MapScreenState extends State<MapScreen> {
                               angle: -pi / 2,
                               child: Column(
                                 children: [
-                                  // if (feature['properties']['icon'] != null)
-                                  //   Image.network(
-                                  //     feature['properties']['icon'],
-                                  //     height: 13,
-                                  //     width: 13,
-                                  //   ),
+                                  if (feature['properties']['icon'] != null)
+                                    Image.network(
+                                      feature['properties']['icon'],
+                                      height: 13,
+                                      width: 13,
+                                    ),
                                   Text(
                                     feature['properties']['label'] ?? '',
                                     style: const TextStyle(
@@ -313,7 +326,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _handleLabelTap(
-      String roomId, String type, LatLng position) async {
+      String roomId, String type, LatLng position, String label) async {
     String serviceName = '';
     String serviceType = '';
     String openTime = "";
@@ -456,7 +469,18 @@ class _MapScreenState extends State<MapScreen> {
                     children: [
                       _buildButton("Directions", Icons.directions_outlined),
                       _buildButton("Save", Icons.bookmark_outline_outlined,
-                          onTap: () {}),
+                          onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SaveLocationDialog(
+                              roomId: roomId,
+                              position: position,
+                              label: label1,
+                            );
+                          },
+                        );
+                      }),
                       _buildButton("Favorite", Icons.star_border_outlined),
                       _buildButton(
                         "Share",
@@ -769,7 +793,9 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
+//  _saveLocation(String roomId, LatLng position){
 
+//  }
   Widget _buildButton(String label, IconData icon, {VoidCallback? onTap}) {
     Color buttonColor;
     Color textColor;
