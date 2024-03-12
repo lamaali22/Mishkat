@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mishkat/pages/Profile.dart';
 import 'package:mishkat/pages/mapView.dart';
 
@@ -49,7 +50,7 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => MapScreen(
-                          title: "",
+                       center: LatLng(24.723315121952027, 46.63643191673523)
                         )),
               );
               break;

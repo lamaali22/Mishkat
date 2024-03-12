@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mishkat/pages/mapView.dart';
 import 'package:mishkat/pages/otpVerification.dart';
 import 'package:mishkat/pages/phoneNumberPage.dart';
@@ -166,7 +167,7 @@ class _HomePage extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => MapScreen(title: 'Flutter Map GeoJson Demo')),
+                            builder: (context) => MapScreen(center: LatLng(24.723315121952027, 46.63643191673523))),
                       );
                     },
                     child: Text('Continue as guest'),

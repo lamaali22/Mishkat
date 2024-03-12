@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +13,7 @@ import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
 import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
+import 'package:mishkat/services/shortestPath.dart';
 import 'package:mishkat/widgets/Messages.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 import 'package:mishkat/widgets/saveLocation.dart';
@@ -57,6 +59,8 @@ class _MapScreenState extends State<MapScreen> {
   List<LatLng> shortestPath = [];
   List<Map<String, dynamic>> places = [];
   String selectedPlace = '';
+  //to draw shortest path
+  List<Polyline> polylines = [];
 
   _MapScreenState()
       : mapController = MapController(),
@@ -499,11 +503,11 @@ class _MapScreenState extends State<MapScreen> {
                       _buildButton("Directions", Icons.directions_outlined,
                           onTap: () {
                         setState(() {
-                          shortestPath = [];
+                          //shortestPath = [];
                           // polygons.clear();  // Clear any existing paths
                         });
                         // Trigger shortest path calculation
-                        // _calculateShortestPath();
+                        _calculateShortestPath();
                       }),
                       _buildButton("Save", Icons.bookmark_outline_outlined,
                           onTap: () {
@@ -1011,59 +1015,95 @@ class _MapScreenState extends State<MapScreen> {
     print('user location isnt null at 925');
   }
 
-// // Modify the _displayShortestPath method
-//   void _displayShortestPath(List<LatLng> shortestPath) {
-//   // Clear existing markers or overlays related to paths
-//   //polygons.clear();
-//   print('shortest path is not empty? ${shortestPath.isNotEmpty}');
+// Modify the _calculateShortestPath method
+  void _calculateShortestPath() async {
+  // Ensure there is a user location and a tapped location
+  if (userLocationMarker == null || tappedLocation == null) {
+    print('userlocation is null ? ${userLocationMarker == null}');
+    print('tappedlocation is null ? ${tappedLocation == null}');
+    return;
+  }
 
-//   // Draw the path on the map
-//   if (shortestPath.isNotEmpty) {
-//     // Get polylines from the ShortestPath class
-//     List<Polyline> polylines = ShortestPath.getPolylines(shortestPath);
+  // Calculate the shortest path using the ShortestPath class
+   Set<String>  calculatedShortestPath =
+      await ShortestPath.calculateShortestPath(
+         location.currentLocation, tappedLocation);
 
-//     // Add the polylines to the list of polygons
-//   setState(() {
-//     polygons.addAll(polylines.cast<Polygon>());
-//   });
-
-//     // Move the camera to the center of the path with an appropriate zoom level
-//     final centerOfPath = calculateCenterOfPath(shortestPath);
-//     mapController.move(centerOfPath, 18.0);
-//   }
-// }
-
-//   // Helper method to calculate the center of the path
-//   LatLng calculateCenterOfPath(List<LatLng> path) {
-//     double sumLat = 0.0;
-//     double sumLng = 0.0;
-
-//     for (final point in path) {
-//       sumLat += point.latitude;
-//       sumLng += point.longitude;
-//     }
-
-//     final avgLat = sumLat / path.length;
-//     final avgLng = sumLng / path.length;
-
-//     return LatLng(avgLat, avgLng);
-//   }
-
-// // Modify the _calculateShortestPath method
-//   void _calculateShortestPath() async {
-//   // Ensure there is a user location and a tapped location
-//   if (userLocationMarker == null || tappedLocation == null) {
-//     print('userlocation is null ? ${userLocationMarker == null}');
-//     print('tappedlocation is null ? ${tappedLocation == null}');
-//     return;
-//   }
-
-//   // Calculate the shortest path using the ShortestPath class
-//   List<LatLng> calculatedShortestPath =
-//       await ShortestPath.calculateShortestPath(
-//          location.currentLocation, tappedLocation);
-// print('calculatedShortestPath length is ${calculatedShortestPath.first}');
-//   // Display the shortest path on the map
-//   _displayShortestPath(calculatedShortestPath);
-// }
+print('calculatedShortestPath length is ${calculatedShortestPath}');
+  // Display the shortest path on the map
+    displayShortestPath(calculatedShortestPath);
 }
+  
+  
+static Future<void> displayShortestPath(
+  // MapController mapController, // Map controller to control the map
+  Set<String> pathVertices, // Set of path IDs representing the shortest path
+  ) async {
+    print("start displayshortestpath");
+
+   MapController mapController;
+  // Retrieve the GeoJSON data
+  String geoJsonString = await rootBundle.loadString('assets/map.geojson');
+  Map<String, dynamic> geoJson = json.decode(geoJsonString);
+
+  // Iterate through the features in the GeoJSON data
+  for (var feature in geoJson['features']) {
+    // Check if the feature is a LineString and its ID is in pathVertices
+    if (feature['geometry']['type'] == 'LineString' &&
+        pathVertices.contains(feature['properties']['pathID'])) {
+      // Extract coordinates from the feature
+      List<LatLng> coordinates = [];
+      for (var point in feature['geometry']['coordinates']) {
+        coordinates.add(LatLng(point[1], point[0]));
+      }
+
+      // Create a polyline and add it to the map
+      Polyline polyline = Polyline(
+        points: coordinates,
+        color: Colors.blue,
+        strokeWidth: 4,
+      );
+      //  mapController.lines.add(polyline);
+    }
+  }
+      print("end displayshortestpath");
+
+}
+
+Future<List<Polyline>> retrievePathGeometries(
+  List<String> pathIds, // List of path IDs representing the shortest path
+  Map<String, dynamic> geoJsonData, // GeoJSON data containing path geometries
+) async {
+  List<Polyline> polylines = [];
+
+  // Iterate through the GeoJSON features to find the paths with matching IDs
+  List<dynamic>? features = geoJsonData['features'] as List<dynamic>?;
+
+  if (features != null) {
+    features.forEach((feature) {
+      if (feature['properties']['pathID'] != null &&
+          pathIds.contains(feature['properties']['pathID'].toString())) {
+        // Extract coordinates of the path
+        List<dynamic> coordinates = feature['geometry']['coordinates'];
+        List<LatLng> points = [];
+
+        coordinates.forEach((coordinate) {
+          points.add(LatLng(coordinate[1], coordinate[0]));
+        });
+
+        // Create a polyline from the coordinates
+        Polyline polyline = Polyline(
+          points: points,
+          color: Colors.blue, // Dark blue color for the path
+          strokeWidth: 4,
+        );
+
+        polylines.add(polyline);
+      }
+    });
+  }
+
+  return polylines;
+}
+
+ }

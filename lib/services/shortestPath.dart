@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,37 +7,32 @@ import 'dart:math' as math;
 class ShortestPath {
   static RoomGraph roomGraph = RoomGraph();
 
-  static Future<List<LatLng>> calculateShortestPath(
+  static Future<Set<String>> calculateShortestPath(
     LatLng userLocation,
     LatLng tappedLocation,
-   // List<Map<String, dynamic>> paths,
-
-    
   ) async {
-    String startRoomId = '6G47';
-    //findNearestRoom(userLocation, roomGraph);
-    String endRoomId = '6G51';
-    // findNearestRoom(tappedLocation, roomGraph);
-print('start room is $startRoomId');
-print('end room is $endRoomId');
+    String startRoomId = findNearestRoom(userLocation, roomGraph);
+    String endRoomId = findNearestRoom(tappedLocation, roomGraph);
+print('startRoomId is $startRoomId');
+print('endRoomId is $tappedLocation');
 
     Map<String, double> distances = roomGraph.dijkstra(startRoomId);
-    print('inside shortest');
-    List<LatLng> shortestPath = [];
+    Set<String> shortestPath = {};
     String currentRoomId = endRoomId;
 
-    while (currentRoomId != startRoomId) {
-      RoomNode currentNode = roomGraph.nodes[currentRoomId]!;
-      shortestPath.add(LatLng(currentNode.coordinates[1], currentNode.coordinates[0]));
+print('distances are ${distances.entries}');
 
+    while (currentRoomId != startRoomId) {
+      shortestPath.add(currentRoomId);
       currentRoomId = findPreviousRoom(currentRoomId, distances, roomGraph);
     }
 
-    shortestPath.add(userLocation);
-    shortestPath = shortestPath.reversed.toList(); // Reverse the path
+    shortestPath.add(startRoomId);
 print('shortest path is ${shortestPath.length}');
     return shortestPath;
   }
+
+  
 
   static String findNearestRoom(LatLng point, RoomGraph roomGraph) {
     double minDistance = double.infinity;
@@ -46,7 +40,7 @@ print('shortest path is ${shortestPath.length}');
 
     roomGraph.nodes.forEach((roomId, node) {
       double distance = calculateDistance(point, LatLng(node.coordinates[1], node.coordinates[0]));
-print('distance is $distance');
+
       if (distance < minDistance) {
         minDistance = distance;
         nearestRoomId = roomId;
@@ -65,9 +59,9 @@ print('distance is $distance');
     String previousRoomId = currentRoomId;
 
     roomGraph.edges.forEach((edge) {
-      String start = edge.elementAt(0);
-      String end = edge.elementAt(1);
-      double weight = edge.elementAt(2);
+      String start = edge.start;
+      String end = edge.end;
+      double weight = edge.weight;
 
       if (end == currentRoomId) {
         double totalDistance = currentDistance - weight;
@@ -80,7 +74,6 @@ print('distance is $distance');
     return previousRoomId;
   }
 
- 
   static double calculateDistance(LatLng point1, LatLng point2) {
     const R = 6371000.0; // Radius of the Earth in meters
 
@@ -102,25 +95,7 @@ print('distance is $distance');
     return distance;
   }
 
- static double degreesToRadians(double degrees) {
+  static double degreesToRadians(double degrees) {
     return degrees * (math.pi / 180.0);
   }
-
-  static List<Polyline> getPolylines(List<LatLng> pathPoints) {
-    List<Polyline> polylines = [];
-
-    if (pathPoints.length > 1) {
-      List<LatLng> polylineCoordinates = pathPoints;
-      Polyline polyline = Polyline(
-        points: polylineCoordinates,
-        color: Color.fromARGB(66, 245, 0, 204),
-        strokeWidth: 4,
-      );
-      polylines.add(polyline);
-    }
-
-    return polylines;
-  }
-
-  
 }
