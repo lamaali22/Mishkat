@@ -210,6 +210,7 @@ class _EditProfile extends State<EditProfile> {
             "Edit Profile",
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w500,
+              fontSize: 24,
               color: Colors.white,
             ),
           ),

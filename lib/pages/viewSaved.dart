@@ -122,7 +122,7 @@ class _SavedPlacesPageState extends State<SavedPlacesPage> {
         toolbarHeight: 90, // Set the desired height here
         // Additional properties if needed
       ),
-      bottomNavigationBar: CustomNavigationBar(index: 2),
+      bottomNavigationBar: CustomNavigationBar(index: 3),
       body: ListView(
         children: [
           for (final day in [
@@ -197,12 +197,15 @@ class _SavedPlacesPageState extends State<SavedPlacesPage> {
                                       LatLng coordinates =
                                           LatLng(latitude, longitude);
 
-                                      Navigator.push(
+                                      Navigator.pushAndRemoveUntil(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              MapScreen(center: coordinates),
+                                          builder: (context) => MapScreen(
+                                            center: coordinates,
+                                          ),
                                         ),
+                                        (route) =>
+                                            false, // This predicate will remove all the routes from the stack
                                       );
                                     },
                                   ),

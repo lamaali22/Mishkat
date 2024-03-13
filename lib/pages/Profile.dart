@@ -3,7 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mishkat/pages/EditProfile.dart';
+import 'package:mishkat/pages/FavoritesScreen.dart';
 import 'package:mishkat/pages/home_page.dart';
+import 'package:mishkat/pages/viewSaved.dart';
+import 'package:mishkat/services/ShareLocaion.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 import 'package:mishkat/firebase_options.dart';
 
@@ -56,18 +59,31 @@ class _ProfileSettingsList extends State<ProfileSettingsList> {
   }
 
   Future<void> handleFavorites() async {
-    print("favorites");
+    print("favorites accessed from index 0 ( profile)");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FavoritesScreen(
+          index: 0,
+        ),
+      ),
+    );
   }
 
   void handleMyClasses() async {
     print("My classes");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SavedPlacesPage(),
+      ),
+    );
   }
 
-void handleSignout(BuildContext context) async {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
+  void handleSignout(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
         backgroundColor: Color.fromARGB(255, 242, 243, 247),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
@@ -75,74 +91,88 @@ void handleSignout(BuildContext context) async {
             color: Colors.transparent,
           ),
         ),
-        title: Text("Confirm Sign Out"),
-        content: Text("Are you sure you want to sign out?"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 16), // Add some spacing
+            Text(
+              "Are you sure you want to signout?",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF09186C),
+              ),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close the dialog
-            },
-            child: Container(
-              width: 100,
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Colors.white,
-              ),
-              child: Text(
-                "Cancel",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                color: Color.fromARGB(255, 35, 51, 143),
+          ButtonBar(
+            alignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.only(left: 12, right: 12),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 229, 229, 232),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                  },
+                  child: Text(
+                    "Cancel",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromARGB(255, 83, 86, 105),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close the dialog
-              try {
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
-              } catch (e) {
-                print("Error signing out: $e");
-                // Handle error gracefully, show snackbar, etc.
-              }
-            },
-            child: Container(
-              width: 100,
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Colors.white,
+              SizedBox(
+                width: 15,
               ),
-              child: Text(
-                "Sign Out",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                color: Color.fromARGB(255, 35, 51, 143),
+              Container(
+                padding: EdgeInsets.only(left: 12, right: 12),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 249, 231, 231),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: TextButton(
+                  onPressed: () async {
+                    try {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomePage()),
+                      );
+                    } catch (e) {
+                      print("Error signing out: $e");
+                      // Handle error gracefully, show snackbar, etc.
+                    }
+                  },
+                  child: Text(
+                    "Sign Out",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromARGB(255, 176, 63, 63),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
-      );
-    },
-  );
-}
+      ),
+    );
+  }
 
-void handleDeleteAccount(BuildContext context) async {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
+  void handleDeleteAccount(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
         backgroundColor: Color.fromARGB(255, 242, 243, 247),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
@@ -150,75 +180,101 @@ void handleDeleteAccount(BuildContext context) async {
             color: Colors.transparent,
           ),
         ),
-        title: Text("Confirm Delete Account"),
-        content: Text("Are you sure you want to delete your account? This action cannot be undone."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close the dialog
-            },
-            child: Container(
-              width: 100,
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Color.fromARGB(255, 207, 214, 255),
-              ),
-              child: Text(
-                "Cancel",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                color: Color.fromARGB(255, 35, 51, 143),
-                ),
-              ),
-            ),
+        title: Text(
+          "Confirm Delete Account",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF09186C),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close the dialog
-              // Show a configuration message
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('Deleting account...'),
-                duration: Duration(seconds: 1), // Adjust duration as needed
-              ));
-              try {
-                // Delete the user's account
-                await FirebaseAuth.instance.currentUser?.delete();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => MyApp()), // Replace with appropriate route
-                );
-              } catch (e) {
-                print("Error deleting account: $e");
-                // Handle error gracefully, show snackbar, etc.
-              }
-            },
-            child: Container(
-              width: 100,
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Colors.red,
-              ),
-              child: Text(
-                "Delete",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 16), // Add some spacing
+            Text(
+              "Are you sure you want to delete your account? This action cannot be undone.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF09186C),
               ),
             ),
+          ],
+        ),
+        actions: [
+          ButtonBar(
+            alignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.only(left: 12, right: 12),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 229, 229, 232),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                  },
+                  child: Text(
+                    "Cancel",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromARGB(255, 83, 86, 105),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 15,
+              ),
+              Container(
+                padding: EdgeInsets.only(left: 12, right: 12),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 249, 231, 231),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: TextButton(
+                  onPressed: () async {
+                    // Show a configuration message
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Deleting account...'),
+                      duration:
+                          Duration(seconds: 1), // Adjust duration as needed
+                    ));
+                    try {
+                      // Delete the user's account
+                      await FirebaseAuth.instance.currentUser?.delete();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                MyApp()), // Replace with appropriate route
+                      );
+                    } catch (e) {
+                      print("Error deleting account: $e");
+                      // Handle error gracefully, show snackbar, etc.
+                    }
+                  },
+                  child: Text(
+                    "Delete",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromARGB(255, 176, 63, 63),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
-      );
-    },
-  );
-}
-
+      ),
+    );
+  }
 
   void handleItemSelected(Map<String, dynamic> selectedItem) {
     String text = selectedItem["text"];
@@ -246,19 +302,28 @@ void handleDeleteAccount(BuildContext context) async {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    shareLoc.handleDynamicLinks(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
 
         backgroundColor: iconAndTextColor,
-        title: Text(
-          "Profile",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
+        title: Center(
+          child: Text("Profile",
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                fontSize: 24,
+                color: Colors.white,
+              )),
         ),
+
         toolbarHeight: 90, // Set the desired height here
         // Additional properties if needed
       ),

@@ -13,7 +13,9 @@ import 'package:mishkat/firebase_options.dart';
 import 'package:mishkat/pages/roomInformation.dart';
 import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
+import 'package:mishkat/services/ShareLocaion.dart';
 import 'package:mishkat/services/shortestPath.dart';
+import 'package:mishkat/widgets/FavoritesDialogs.dart';
 import 'package:mishkat/widgets/Messages.dart';
 import 'package:mishkat/widgets/MishkatNavigationBar.dart';
 import 'package:mishkat/widgets/saveLocation.dart';
@@ -36,7 +38,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Map Demo',
-      home: MapScreen(center: LatLng(24.723315121952027, 46.63643191673523)),
+      home: MapScreen(center: LatLng(0, 0)),
     );
   }
 }
@@ -522,8 +524,21 @@ class _MapScreenState extends State<MapScreen> {
                           },
                         );
                       }),
-                      _buildButton("Favorite", Icons.star_border_outlined),
-                      _buildButton("Share", Icons.ios_share),
+                      _buildButton("Favorite", Icons.star_border_outlined,
+                          onTap: () {
+                        if (tappedLocation != null) {
+                          print("tappedloc not null and is $tappedLocation");
+                          AddToFavoritesDialog(context, roomId, tappedLocation);
+                        } else
+                          print("tappedloc  null");
+                      }),
+                      _buildButton("Share", Icons.ios_share, onTap: () {
+                        if (tappedLocation != null) {
+                          print("tappedloc not null and is $tappedLocation");
+                          shareLoc.createDynamicLink(tappedLocation);
+                        } else
+                          print("tappedloc  null");
+                      }),
                     ],
                   ),
                 ),
@@ -890,34 +905,13 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     BluetoothPermissions().initBluetooth();
     _loadGeoJson();
-    periodicStartScanning();
+    if (widget.center != LatLng(0, 0)) {
+      displayReceivedLocation(widget.center);
+      print(
+          "currentLatLng    ${widget.center.latitude}   ,  ${widget.center.longitude}");
+    }
 
-//backup working code
-    // Future.delayed(Duration(seconds: 5), () {
-    //   location.startScanning();
-    //   // if no ble signals
-    //   if (location.currentLocation == LatLng(0, 0)) {
-    //     // wait for 15 more seconds
-    //     Future.delayed(Duration(seconds: 15), () {
-    //       //if there is still no signals
-    //       if (location.currentLocation == LatLng(0, 0)) {
-    //         print("currentLocaoitn is in first check  0,0");
-    //         showNoSignalAvailable(context);
-    //       } //if signals were detected after 15 seconds
-    //       else {
-    //         displayUserCurrentLocation(location.currentLocation);
-    //         print("displayUserCurrentLocation now called");
-    //         print("mapview  currentLocation  ${location.currentLocation}");
-    //       }
-    //     });
-    //   } // there are signals
-    //   else {
-    //     displayUserCurrentLocation(location.currentLocation);
-    //     print("displayUserCurrentLocation now called");
-    //     print("mapview  currentLocation  ${location.currentLocation}");
-    //   }
-    // });
-    // print("Executing code every 10 seconds");
+    periodicStartScanning();
   }
 
   late Timer scanningTimer;
@@ -1015,95 +1009,122 @@ class _MapScreenState extends State<MapScreen> {
     print('user location isnt null at 925');
   }
 
-// Modify the _calculateShortestPath method
-  void _calculateShortestPath() async {
-  // Ensure there is a user location and a tapped location
-  if (userLocationMarker == null || tappedLocation == null) {
-    print('userlocation is null ? ${userLocationMarker == null}');
-    print('tappedlocation is null ? ${tappedLocation == null}');
-    return;
+  Marker? receivedLocationMarker;
+  void displayReceivedLocation(LatLng sharedLatLng) {
+    // Create a new marker
+    // Create a new marker
+    receivedLocationMarker = Marker(
+      width: 48.0,
+      height: 80.0,
+      point: sharedLatLng,
+      builder: (BuildContext context) {
+        return Transform.rotate(
+          angle: -90 * 3.1415926535 / 180,
+          child: Icon(
+            Icons.location_pin,
+            size: 40.0,
+            color: Color.fromARGB(255, 203, 59, 48),
+          ),
+        );
+      },
+    );
+    // Add the new marker to the list of markers
+    setState(() {
+      polygonLabels.add(receivedLocationMarker!);
+    });
+    if (receivedLocationMarker == null) {
+      // Move the camera to the user's location
+      mapController.move(sharedLatLng, 25.0);
+      print("ReceivedLocloaction is null");
+    }
   }
 
-  // Calculate the shortest path using the ShortestPath class
-   Set<String>  calculatedShortestPath =
-      await ShortestPath.calculateShortestPath(
-         location.currentLocation, tappedLocation);
+// Modify the _calculateShortestPath method
+  void _calculateShortestPath() async {
+    // Ensure there is a user location and a tapped location
+    if (userLocationMarker == null || tappedLocation == null) {
+      print('userlocation is null ? ${userLocationMarker == null}');
+      print('tappedlocation is null ? ${tappedLocation == null}');
+      return;
+    }
 
-print('calculatedShortestPath length is ${calculatedShortestPath}');
-  // Display the shortest path on the map
+    // Calculate the shortest path using the ShortestPath class
+    Set<String> calculatedShortestPath =
+        await ShortestPath.calculateShortestPath(
+            location.currentLocation, tappedLocation);
+
+    print('calculatedShortestPath length is ${calculatedShortestPath}');
+    // Display the shortest path on the map
     displayShortestPath(calculatedShortestPath);
-}
-  
-  
-static Future<void> displayShortestPath(
-  // MapController mapController, // Map controller to control the map
-  Set<String> pathVertices, // Set of path IDs representing the shortest path
+  }
+
+  static Future<void> displayShortestPath(
+    // MapController mapController, // Map controller to control the map
+    Set<String> pathVertices, // Set of path IDs representing the shortest path
   ) async {
     print("start displayshortestpath");
 
-   MapController mapController;
-  // Retrieve the GeoJSON data
-  String geoJsonString = await rootBundle.loadString('assets/map.geojson');
-  Map<String, dynamic> geoJson = json.decode(geoJsonString);
+    MapController mapController;
+    // Retrieve the GeoJSON data
+    String geoJsonString = await rootBundle.loadString('assets/map.geojson');
+    Map<String, dynamic> geoJson = json.decode(geoJsonString);
 
-  // Iterate through the features in the GeoJSON data
-  for (var feature in geoJson['features']) {
-    // Check if the feature is a LineString and its ID is in pathVertices
-    if (feature['geometry']['type'] == 'LineString' &&
-        pathVertices.contains(feature['properties']['pathID'])) {
-      // Extract coordinates from the feature
-      List<LatLng> coordinates = [];
-      for (var point in feature['geometry']['coordinates']) {
-        coordinates.add(LatLng(point[1], point[0]));
-      }
+    // Iterate through the features in the GeoJSON data
+    for (var feature in geoJson['features']) {
+      // Check if the feature is a LineString and its ID is in pathVertices
+      if (feature['geometry']['type'] == 'LineString' &&
+          pathVertices.contains(feature['properties']['pathID'])) {
+        // Extract coordinates from the feature
+        List<LatLng> coordinates = [];
+        for (var point in feature['geometry']['coordinates']) {
+          coordinates.add(LatLng(point[1], point[0]));
+        }
 
-      // Create a polyline and add it to the map
-      Polyline polyline = Polyline(
-        points: coordinates,
-        color: Colors.blue,
-        strokeWidth: 4,
-      );
-      //  mapController.lines.add(polyline);
-    }
-  }
-      print("end displayshortestpath");
-
-}
-
-Future<List<Polyline>> retrievePathGeometries(
-  List<String> pathIds, // List of path IDs representing the shortest path
-  Map<String, dynamic> geoJsonData, // GeoJSON data containing path geometries
-) async {
-  List<Polyline> polylines = [];
-
-  // Iterate through the GeoJSON features to find the paths with matching IDs
-  List<dynamic>? features = geoJsonData['features'] as List<dynamic>?;
-
-  if (features != null) {
-    features.forEach((feature) {
-      if (feature['properties']['pathID'] != null &&
-          pathIds.contains(feature['properties']['pathID'].toString())) {
-        // Extract coordinates of the path
-        List<dynamic> coordinates = feature['geometry']['coordinates'];
-        List<LatLng> points = [];
-
-        coordinates.forEach((coordinate) {
-          points.add(LatLng(coordinate[1], coordinate[0]));
-        });
-
-        // Create a polyline from the coordinates
+        // Create a polyline and add it to the map
         Polyline polyline = Polyline(
-          points: points,
-          color: Colors.blue, // Dark blue color for the path
+          points: coordinates,
+          color: Colors.blue,
           strokeWidth: 4,
         );
-
-        polylines.add(polyline);
+        //  mapController.lines.add(polyline);
       }
-    });
+    }
+    print("end displayshortestpath");
   }
 
-  return polylines;
-}
+  Future<List<Polyline>> retrievePathGeometries(
+    List<String> pathIds, // List of path IDs representing the shortest path
+    Map<String, dynamic> geoJsonData, // GeoJSON data containing path geometries
+  ) async {
+    List<Polyline> polylines = [];
 
- }
+    // Iterate through the GeoJSON features to find the paths with matching IDs
+    List<dynamic>? features = geoJsonData['features'] as List<dynamic>?;
+
+    if (features != null) {
+      features.forEach((feature) {
+        if (feature['properties']['pathID'] != null &&
+            pathIds.contains(feature['properties']['pathID'].toString())) {
+          // Extract coordinates of the path
+          List<dynamic> coordinates = feature['geometry']['coordinates'];
+          List<LatLng> points = [];
+
+          coordinates.forEach((coordinate) {
+            points.add(LatLng(coordinate[1], coordinate[0]));
+          });
+
+          // Create a polyline from the coordinates
+          Polyline polyline = Polyline(
+            points: points,
+            color: Colors.blue, // Dark blue color for the path
+            strokeWidth: 4,
+          );
+
+          polylines.add(polyline);
+        }
+      });
+    }
+
+    return polylines;
+  }
+}

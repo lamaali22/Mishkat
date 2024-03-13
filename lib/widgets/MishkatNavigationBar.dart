@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mishkat/pages/FavoritesScreen.dart';
 import 'package:mishkat/pages/Profile.dart';
 import 'package:mishkat/pages/mapView.dart';
+import 'package:mishkat/pages/viewSaved.dart';
 
 class CustomNavigationBar extends StatefulWidget {
   final int index;
@@ -39,26 +41,47 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
           // Use the Navigator to navigate to the appropriate page based on the selected index
           switch (index) {
             case 0:
-              Navigator.push(
+              Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileSettingsList()),
+                MaterialPageRoute(
+                  builder: (context) => ProfileSettingsList(),
+                ),
+                (route) => false,
               );
               break;
             case 1:
               print("<MAP> on bar clicked");
-              Navigator.push(
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => MapScreen(
-                       center: LatLng(24.723315121952027, 46.63643191673523)
-                        )),
+                  builder: (context) => MapScreen(
+                    center: LatLng(0, 0),
+                  ),
+                ),
+                (route) => false,
               );
               break;
             case 2:
-              print("favorites on bar clicked");
+              print("favorites clicked accessed from index 2 (favorites)");
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FavoritesScreen(
+                    index: 2,
+                  ),
+                ),
+                (route) => false,
+              );
               break;
             case 3:
               print("my classes on bar clicked");
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SavedPlacesPage(),
+                ),
+                (route) => false, // This removes all the routes from the stack
+              );
               break;
             // Add cases for other navigation items if needed
             default:
