@@ -14,6 +14,7 @@ import 'package:mishkat/pages/roomInformation.dart';
 import 'package:mishkat/services/BluetoothPermissions.dart';
 import 'package:mishkat/services/CurrentLocation.dart';
 import 'package:mishkat/services/ShareLocaion.dart';
+import 'package:mishkat/services/fayShortestPath/newMap.dart';
 import 'package:mishkat/services/shortestPath.dart';
 import 'package:mishkat/widgets/FavoritesDialogs.dart';
 import 'package:mishkat/widgets/Messages.dart';
@@ -62,7 +63,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Map<String, dynamic>> places = [];
   String selectedPlace = '';
   //to draw shortest path
-  List<Polyline> polylines = [];
+  List<Polyline> _polylines = [];
 
   _MapScreenState()
       : mapController = MapController(),
@@ -245,7 +246,7 @@ class _MapScreenState extends State<MapScreen> {
 
         // Add Polygon Label
 
-        if (feature['properties']['roomId'] != null) {
+        if (feature['properties']['roomId'] != null && feature['properties']['type'] != null && feature['geometry']['type'] == "Polygon") { // additional checks to avoid 'LineString'
           LatLng labelPosition = calculateAveragePosition(coordinates);
           // Get a reference to the Firestore document
           String roomId = feature['properties']['roomId'];
@@ -502,15 +503,23 @@ class _MapScreenState extends State<MapScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildButton("Directions", Icons.directions_outlined,
-                          onTap: () {
-                        setState(() {
-                          //shortestPath = [];
-                          // polygons.clear();  // Clear any existing paths
-                        });
-                        // Trigger shortest path calculation
-                        _calculateShortestPath();
-                      }),
+                    _buildButton(
+  "Directions",
+  Icons.directions_outlined,
+  onTap: () {
+    // Navigate to the MapWithShortestPath screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapWithShortestPath(
+          userLocation: userLocation,
+          tappedLocation: tappedLocation,
+        ),
+      ),
+    );
+  },
+),
+
                       _buildButton("Save", Icons.bookmark_outline_outlined,
                           onTap: () {
                         showDialog(
@@ -1047,15 +1056,22 @@ class _MapScreenState extends State<MapScreen> {
       print('tappedlocation is null ? ${tappedLocation == null}');
       return;
     }
-
+    print('inside _calculateShortestPath');
+    MapWithShortestPath(
+            userLocation: userLocation,
+            tappedLocation: tappedLocation,
+          );
     // Calculate the shortest path using the ShortestPath class
-    Set<String> calculatedShortestPath =
-        await ShortestPath.calculateShortestPath(
-            location.currentLocation, tappedLocation);
+    // Set<String> calculatedShortestPath =
+    //     await ShortestPath.calculateShortestPath(
+    //         location.currentLocation, tappedLocation);
 
-    print('calculatedShortestPath length is ${calculatedShortestPath}');
+    // print('calculatedShortestPath length is ${calculatedShortestPath}');
     // Display the shortest path on the map
-    displayShortestPath(calculatedShortestPath);
+    // displayShortestPath(calculatedShortestPath);
+    //  final paths = _parseGeoJsonData();
+    //  print('paths are $paths');
+    // _drawPaths(paths);
   }
 
   static Future<void> displayShortestPath(
@@ -1127,4 +1143,91 @@ class _MapScreenState extends State<MapScreen> {
 
     return polylines;
   }
+
+////
+// Example GeoJSON data representing paths
+var geoJsonData = '''
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "pathID": 1
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [46.6369305207763, 24.72336133637411],
+          [46.63692703293418, 24.723120259759497]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "pathID": 2
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [46.63668924320575, 24.72312219072346],
+          [46.636927352341814, 24.7231207701398]
+        ]
+      }
+    }
+  ]
+}
+'''; 
+
+
+void _drawPaths(List<List<LatLng>> paths) {
+  print("start drawPath");
+  setState(() {
+    print("in drawPath ${paths.length}");
+    _polylines.clear();
+    for (int i = 0; i < paths.length; i++) {
+      _polylines.add(Polyline(
+        points: paths[i],
+        color: Colors.blue,
+        // polylineId: PolylineId(i.toString()), // Use a unique identifier
+      ));
+    }
+  });
+}
+
+List<List<LatLng>> _parseGeoJsonData() {
+  print('start of _parseGeoJsonData');
+  final geoJson = json.decode(geoJsonData);
+  print('decoded GeoJSON: $geoJson');
+
+  final List<List<LatLng>> paths = [];
+        final extractedData = geoJson as Map<String, dynamic>;
+        List item=extractedData['features'];
+          for(var data in item)
+          {
+            print('inside printing');
+          print(data['geometry']['coordinates']);
+          }
+
+  for (var feature in geoJson['features']) {
+    print('feature is $feature');
+    if (feature['properties'].containsKey('pathID')) {
+      print('inside if pathid');
+      final coordinates = feature['geometry']['coordinates'] as List<dynamic>;
+      final List<LatLng> latLngList = coordinates
+          .map<LatLng>((coord) => LatLng(coord[1] as double, coord[0] as double))
+          .toList();
+      paths.add(latLngList);
+      print('latLngList $latLngList');
+    }
+  }
+
+  print('paths in ${paths}');
+  return paths;
+}
+
+
+
+
 }
