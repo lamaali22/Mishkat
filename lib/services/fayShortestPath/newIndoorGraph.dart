@@ -8,7 +8,7 @@ class RoomNode {
   String id;
   List<double> coordinates;
   List<String> connectedRooms;
-  List<String> connectedPaths;
+  List<int> connectedPaths;
 
   RoomNode({
     required this.id,
@@ -22,13 +22,13 @@ class RoomNode {
 class RoomEdge {
   int pathId;
   List<String> connectedRooms;
-  List<int> connectedPaths;
+  //List<int> connectedPaths;
   List<List<double>> coordinates; // Coordinates of the path's line
 
   RoomEdge({
     required this.pathId,
     required this.connectedRooms,
-    required this.connectedPaths,
+    //required this.connectedPaths,
     required this.coordinates,
   });
 }
@@ -92,6 +92,33 @@ class RoomGraph {
   }
 }
 
+// Function to calculate the shared path Id between two rooms
+int calculateSharedPathId(RoomNode startNode, RoomNode endNode, Map<String, dynamic> geoJson) {
+  // Initialize shared path ID to -1 (indicating no shared path found)
+  int sharedPathId = -1;
+
+  // Loop through each feature in the GeoJSON data
+  List<dynamic>? features = geoJson['features'];
+  if (features != null) {
+    for (var feature in features) {
+      // Check if the feature represents a path
+      if (feature['properties'].containsKey('pathID')) {
+        int pathId = feature['properties']['pathID'];
+        List<dynamic>? connectedRooms = feature['properties']['connectedRooms'];
+        if (connectedRooms != null && connectedRooms.contains(startNode.id) && connectedRooms.contains(endNode.id)) {
+          // The path connects both startNode and endNode
+          sharedPathId = pathId;
+          break;
+        }
+      }
+    }
+  }
+
+  // Return the shared path ID
+  return sharedPathId;
+}
+
+
 RoomGraph buildRoomGraph(Map<String, dynamic> geoJson) {
   RoomGraph roomGraph = RoomGraph();
 
@@ -103,6 +130,8 @@ RoomGraph buildRoomGraph(Map<String, dynamic> geoJson) {
     if (features != null) {
       print('features is not null');
       features.forEach((feature) {
+        
+        //creating roomNode and establish connection with edge
         if (feature['properties'].containsKey('roomId')) {
           print('there is roomId');
           String roomId = feature['properties']['roomId'];
@@ -110,14 +139,14 @@ RoomGraph buildRoomGraph(Map<String, dynamic> geoJson) {
 
           List<String> connectedRooms = [];
           List<int> connectedPaths = [];
-
+          // get coonectedRooms
           if (feature['properties']['connectedRooms'] != null) {
             connectedRooms = List<String>.from(feature['properties']['connectedRooms']);
-            print('connectedRooms are ${connectedRooms.length}');
+            print('in $roomId are ${connectedRooms.length}');
           } else {
-            print('Connected rooms is null for room $roomId');
+            print('rooms is null for room $roomId');
           }
-
+          // get connectedPaths
           if (feature['properties']['connectedPaths'] != null) {
             connectedPaths = List<int>.from(feature['properties']['connectedPaths']);
             print('connectedPaths are ${connectedPaths.length}');
@@ -129,67 +158,106 @@ RoomGraph buildRoomGraph(Map<String, dynamic> geoJson) {
             id: roomId,
             coordinates: calculateRoomCenter(polygonCoordinates),
             connectedRooms: connectedRooms,
-            connectedPaths: [],
+            connectedPaths: connectedPaths,
           );
 
           print('room graph before node ${roomGraph.nodes}');
+          print('${roomNode.id} coordinates are ${polygonCoordinates}');
+          print('calculatedRoomCenter ${calculateRoomCenter(polygonCoordinates)}');
 
           roomGraph.addNode(roomNode);
           print('room graph after node ${roomGraph.nodes}');
-          print('roomNode is ${roomNode.id}');
+          print('add roomNode is ${roomNode.id}');
 
           if (connectedRooms.isNotEmpty) {
             print('theres connectedRooms');
-            connectedRooms.forEach((connectedRoomId) {
-              RoomEdge edge = RoomEdge(
-                pathId: 0, // Assuming it's a room node, so pathId is 0
-                connectedRooms: [roomId, connectedRoomId], // Edge connects current room with connected room
-                connectedPaths: [],
-                coordinates: [], // No coordinates for room nodes
-              );
-              roomGraph.addEdge(edge);
-            });
+            for (var connectedRoomId in connectedRooms) {
+              // Find the connected room node
+              RoomNode? connectedRoomNode = roomGraph.getNodeById(connectedRoomId);
+              if (connectedRoomNode != null) {
+                // Calculate the pathId based on the shared path between the current room and the connected room
+                int sharedPathId = calculateSharedPathId(roomNode, connectedRoomNode, geoJson);
+                print('the shared pathId between $roomNode and $connectedRoomId is $sharedPathId');
+
+                // Initialize coordinates for the edge
+                List<List<double>> coordinates = [];
+
+                // Find the coordinates for the shared path
+                List<dynamic>? features = geoJson['features'];
+                if (features != null) {
+                  for (var feature in features) {
+                    if (feature['properties'].containsKey('pathID') && feature['properties']['pathID'] == sharedPathId) {
+                      List<dynamic>? geometry = feature['geometry']['coordinates'];
+                      if (geometry != null && geometry.isNotEmpty) {
+                        // Assuming the shared path is a LineString with only one set of coordinates
+                        coordinates = List<List<double>>.from(geometry[0]);
+                        break; // No need to continue searching once coordinates are found
+                      }
+                    }
+                  }
+                }
+
+                // Create an edge between the current node and the connected room node
+                RoomEdge edge = RoomEdge(
+                  pathId: sharedPathId, // assign the shared path
+                  connectedRooms: connectedRoomNode.connectedRooms ,
+                  //connectedPaths: [],
+                  coordinates: coordinates,
+                );
+
+                // Add the edge to the room graph
+                roomGraph.addEdge(edge);
+              }
+            }
+
           }
+
         } else if (feature['properties'].containsKey('pathID')) {
+          print('inside containsKey ${feature['properties'].containsKey('pathID')} ');
           int pathId = feature['properties']['pathID'];
           List<int>? connectedPaths = feature['properties']['connectedPaths'] != null
               ? List<int>.from(feature['properties']['connectedPaths'])
               : [];
 
-          List<dynamic>? coordinates = feature['geometry']['coordinates'];
+          List<List<double>> coordinates = feature['geometry']['coordinates'];
 
           // Extract connected rooms from other features
           List<String> connectedRooms = [];
           features.forEach((otherFeature) {
-            if (otherFeature['properties'].containsKey('connectedRooms')) {
-              List<dynamic>? otherConnectedRooms = otherFeature['properties']['connectedRooms'];
-              if (otherConnectedRooms != null && otherConnectedRooms.contains(pathId.toString())) {
-                connectedRooms.add(otherFeature['properties']['roomId']);
+            if (otherFeature['properties'].containsKey('roomId')) {
+              String? roomId = otherFeature['properties']['roomId'];
+              if (roomId != null) {
+                List<dynamic>? otherConnectedPaths = otherFeature['properties']['connectedPaths'];
+                if (otherConnectedPaths != null && otherConnectedPaths.contains(pathId)) {
+                  connectedRooms.add(roomId);
+                }
               }
             }
           });
 
+
+
           RoomEdge edge = RoomEdge(
             pathId: pathId,
             connectedRooms: connectedRooms,
-            connectedPaths: connectedPaths,
-            coordinates: coordinates != null ? List<List<double>>.from(coordinates) : [],
+            //connectedPaths: connectedPaths,
+            coordinates: coordinates ,
           );
 
           roomGraph.addEdge(edge);
 
           // Add edges between the path and its connected paths
-          if (connectedPaths.isNotEmpty) {
-            connectedPaths.forEach((connectedPathId) {
-              RoomEdge pathEdge = RoomEdge(
-                pathId: connectedPathId,
-                connectedRooms: [],
-                connectedPaths: [],
-                coordinates: [], // Coordinates will be filled if needed
-              );
-              roomGraph.addEdge(pathEdge);
-            });
-          }
+          // if (connectedPaths.isNotEmpty) {
+          //   connectedPaths.forEach((connectedPathId) {
+          //     RoomEdge pathEdge = RoomEdge(
+          //       pathId: connectedPathId,
+          //       connectedRooms: feature['properties']['connectedRooms'],
+          //      // connectedPaths: [],
+          //       coordinates: feature['geometry']['coordinates'], 
+          //     );
+          //     roomGraph.addEdge(pathEdge);
+          //   });
+          // }
         }
       });
     }

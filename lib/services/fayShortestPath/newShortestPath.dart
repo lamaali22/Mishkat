@@ -11,7 +11,13 @@ class ShortestPath {
     LatLng userLocation,
     LatLng tappedLocation,
   ) async {
+
     print('roomGraph initially is ${roomGraph.nodes}');
+    roomGraph = buildRoomGraph(geojsonDataX);
+    print('roomGraph.nodes after building is ${roomGraph.nodes}');
+    print('roomGraph.edges after building is ${roomGraph.edges.toList()}');
+
+
     String startNodeId = roomGraph.findNearestNode(userLocation);
     String endNodeId = roomGraph.findNearestNode(tappedLocation);
 
@@ -29,18 +35,28 @@ class ShortestPath {
     roomGraph = buildRoomGraph(geojsonDataX);
 
     Map<String, double> distances = dijkstra(roomGraph, startNodeId);
+    print('distance from dijkstra is $distances');
 
     Set<String> shortestPath = {};
     String currentRoomId = endNodeId;
+    int X =0;
 
-    while (currentRoomId != startNodeId) {
-      print('currentRoomId != startNodeId');
+    while ( X != 20) {
+      X++;
+      // print('currentRoomId != startNodeId');
+
+      // print("roomGraph.edges is empty? ${roomGraph.edges.isEmpty}");
       roomGraph.edges.forEach((edge) {
+        X++;
         if (edge.connectedRooms.contains(currentRoomId)) {
           print('edge contains currentRoomId');
+
           double totalDistance = distances[currentRoomId]! - calculateEdgeWeight(edge, roomGraph.getNodeById(currentRoomId)!);
-          print('inside loop');
-          if (totalDistance == distances[edge.connectedRooms.first]) {
+          print('totalDistance is $totalDistance');
+
+          double tolerance = 1e-10; // Adjust the tolerance value based on your requirements
+          if ((totalDistance - distances[edge.connectedRooms.first]!).abs() < tolerance) {
+            print('totalDistance == distances[edge.connectedRooms.first] is true');
             shortestPath.add(edge.connectedRooms.first);
             currentRoomId = edge.connectedRooms.first;
           }
@@ -50,7 +66,7 @@ class ShortestPath {
     print('currentRoomId is startNodeId');
 
     shortestPath.add(startNodeId);
-    print('startNodeId is $startNodeId');
+    print('startNodeId is empty ${startNodeId.isEmpty}');
     print('shortestPath after startNode $shortestPath');
     return shortestPath;
   }
@@ -59,6 +75,8 @@ class ShortestPath {
     List<double> startCoordinates = startNode.coordinates;
     List<double> endCoordinates = edge.coordinates.last;
     double distance = calculateDistance(startCoordinates, endCoordinates);
+
+    print('result of calculateEdgeWeight is $distance ');
     return distance;
   }
 
@@ -66,5 +84,6 @@ class ShortestPath {
     double dx = end[0] - start[0];
     double dy = end[1] - start[1];
     return sqrt((dx * dx + dy * dy));
-  }
+}
+
 }

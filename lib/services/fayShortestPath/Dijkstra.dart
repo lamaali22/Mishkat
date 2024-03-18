@@ -16,10 +16,17 @@ Map<String, double> dijkstra(RoomGraph roomGraph, String startId) {
   distances[startId] = 0;
 
   while (priorityQueue.isNotEmpty) {
+    print('priorityQueue.isNotEmpty');
     String currentId = priorityQueue.removeFirst();
 
     roomGraph.edges.forEach((edge) {
+      print('roomGraph.edges length ${roomGraph.edges.length}');
+      print('edge id ${edge.pathId} ');
+      print('edge connectedRooms ${edge.connectedRooms} ');
+
       if (edge.connectedRooms.contains(currentId)) {
+        print('roomGraph.edges ${roomGraph.edges}');
+
         double newDistance = distances[currentId]! +
             calculateEdgeWeight(edge, roomGraph.getNodeById(currentId)!);
         if (newDistance < distances[edge.connectedRooms.first]!) {

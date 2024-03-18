@@ -67,7 +67,7 @@ Future<void> calculateShortestPath() async {
               Polyline(
                 points: shortestPath.map((nodeId) {
                   final node =ShortestPath.roomGraph.nodes[nodeId];
-                  print('node is $node');
+                  print('node is ${node?.coordinates}');
                   return LatLng(node!.coordinates[1], node.coordinates[0]);
                 }).toList(),
                 color: Colors.blue,
