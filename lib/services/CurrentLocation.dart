@@ -1,7 +1,7 @@
 // ignore: file_names
 import 'dart:math';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:dart_numerics/dart_numerics.dart';
+//import 'package:dart_numerics/dart_numerics.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mishkat/models/CCISBeacons.dart';
 import 'package:vector_math/vector_math.dart' as vec;
@@ -100,7 +100,7 @@ class Location {
     // Calculate the estimated distance using the Log-Distance Path Loss Model
     num distance = pow(
         10,
-        (pathLoss + (27.55 - 20 * log10(2400)) + (n - 2) * 10 * log10(2400)) /
+        (pathLoss + (27.55 - 20 * 1/* log10(2400)*/) + (n - 2) * 10 * 1/*log10(2400)*/) /
             (10 * n));
 
     return distance;
