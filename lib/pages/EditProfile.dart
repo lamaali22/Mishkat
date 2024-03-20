@@ -334,7 +334,7 @@ class _EditProfile extends State<EditProfile> {
                           }
                         : null, // Set onPressed to null when isChanged is false
                     style: ElevatedButton.styleFrom(
-                      primary: Color(0xFF09186C),
+                      //primary: Color(0xFF09186C),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
